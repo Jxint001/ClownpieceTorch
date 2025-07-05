@@ -13,7 +13,7 @@ from torch import Tensor as TensorT
 
 from typing import Tuple, Any, Iterable
 import torch.multiprocessing as mp
-from clownpiece import wrap_tuple
+from clownpiece.utils_ import wrap_tuple
 
 # global vars
 total_score: int = 0
@@ -98,9 +98,9 @@ def all_close(t1: TensorCT, t2: TensorT)->bool:
   
   eps = 1e-4
   
-#   if tuple(t1.shape) != tuple(t2.shape):
-#     print(f"all_close: shape mismatch: {t1.shape} vs {t2.shape}")
-#     return False
+  if tuple(t1.shape) != tuple(t2.shape):
+    print(f"all_close: shape mismatch: {t1.shape} vs {t2.shape}")
+    return False
   
   t1 = t1.reshape(-1,)
   t2 = t2.reshape(-1,)

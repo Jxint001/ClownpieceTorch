@@ -6,6 +6,23 @@
 #include "meta.h"
 #include <string>
 
+// Macro to simplify GIL release for compute-heavy functions
+#define RELEASE_GIL py::call_guard<py::gil_scoped_release>()
+
+// "Idiot-proof" macros for automatic GIL release on compute functions
+#define DEF_COMPUTE_METHOD(name, func, ...) \
+    .def(name, func, ##__VA_ARGS__, RELEASE_GIL)
+
+#define DEF_COMPUTE_LAMBDA(name, lambda_expr, ...) \
+    .def(name, lambda_expr, ##__VA_ARGS__, RELEASE_GIL)
+
+#define MODULE_DEF_COMPUTE(name, func, ...) \
+    m.def(name, func, ##__VA_ARGS__, RELEASE_GIL)
+
+// Macro for non-compute functions (keeps GIL)
+#define DEF_SIMPLE(name, func, ...) \
+    .def(name, func, ##__VA_ARGS__)
+
 namespace py = pybind11;
 using shape_t = at::shape_t;
 using Tensor = at::Tensor;
@@ -129,8 +146,8 @@ PYBIND11_MODULE(tensor_impl, m) {
         }), py::arg("data"))
 
         /* assignments */
-        .def("__copy__", &at::Tensor::clone, "Create a copy of the tensor")
-        .def("__deepcopy__", &at::Tensor::clone, "Create a deep copy of the tensor")
+        .def("__copy__", &at::Tensor::clone, RELEASE_GIL, "Create a copy of the tensor")
+        .def("__deepcopy__", &at::Tensor::clone, RELEASE_GIL, "Create a deep copy of the tensor")
 
         /* item() */
         .def("item", &at::Tensor::item, "Get the single value of a singleton tensor")
@@ -147,11 +164,11 @@ PYBIND11_MODULE(tensor_impl, m) {
         }, py::arg("dim"), "Get the size of a specific dimension")
         .def("is_contiguous", &at::Tensor::is_contiguous, "Check if the tensor is contiguous")
 
-        .def("clone", &at::Tensor::clone)
-        .def("contiguous", &at::Tensor::contiguous, "Make the tensor contiguous")
-        .def("copy_", &at::Tensor::copy_, py::arg("other"), "Copy data from another tensor")
+        .def("clone", &at::Tensor::clone, RELEASE_GIL)
+        .def("contiguous", &at::Tensor::contiguous, RELEASE_GIL, "Make the tensor contiguous")
+        .def("copy_", &at::Tensor::copy_, py::arg("other"), RELEASE_GIL, "Copy data from another tensor")
         .def("scatter_", &at::Tensor::scatter_,
-             py::arg("dim"), py::arg("index"), py::arg("src"),
+             py::arg("dim"), py::arg("index"), py::arg("src"), RELEASE_GIL,
              "Scatter values from src tensor to this tensor along a specified dimension using index tensor")
 
 
@@ -167,6 +184,47 @@ PYBIND11_MODULE(tensor_impl, m) {
         }, "Get a tensor using a single index")
         .def("__getitem__", [](const at::Tensor &self, py::object idx) {
             // std::cout<<"Getting tensor with index object: "<<py::str(idx)<<std::endl;
+            
+            // Check for mixed indexing case
+            if (py::isinstance<py::tuple>(idx)) {
+                auto t = idx.cast<py::tuple>();
+                bool has_int = false, has_slice = false;
+                
+                for (size_t i = 0; i < t.size(); ++i) {
+                    auto item = t[i];
+                    if (py::isinstance<py::int_>(item)) has_int = true;
+                    else if (py::isinstance<py::slice>(item) || py::isinstance<py::tuple>(item)) has_slice = true;
+                }
+                
+                if (has_int && has_slice) {
+                    // Mixed indexing case: apply indices sequentially
+                    at::Tensor result = self;
+                    
+                    for (size_t i = 0; i < t.size(); ++i) {
+                        auto item = t[i];
+                        if (py::isinstance<py::int_>(item)) {
+                            int index = item.cast<int>();
+                            result = result[index];  // This will reduce dimension
+                        } else if (py::isinstance<py::slice>(item)) {
+                            slice_t slice = py_slice_to_slice_t(item.cast<py::slice>(), result.size(0));
+                            result = result[slice];  // This preserves dimension
+                        } else if (py::isinstance<py::tuple>(item)) {
+                            auto subt = item.cast<py::tuple>();
+                            if (subt.size() == 2) {
+                                slice_t slice(subt[0].cast<int>(), subt[1].cast<int>());
+                                result = result[slice];
+                            } else {
+                                throw std::runtime_error("Invalid tuple size for slice");
+                            }
+                        } else {
+                            throw std::runtime_error("Invalid index type in tuple");
+                        }
+                    }
+                    return result;
+                }
+            }
+            
+            // Normal case: use parse_index
             auto slices = parse_index(self, idx);
             auto p = self[slices];
             // std::cout<<"new_shape=";
@@ -211,64 +269,64 @@ PYBIND11_MODULE(tensor_impl, m) {
 
 
         /*** Part IV: Element-wise Binary and Unary Operators ***/
-        .def("__gt__", [](const at::Tensor &a, const at::Tensor &b) { return a > b; })
-        .def("__gt__", [](const at::Tensor &a, at::dtype b) { return a > at::Tensor(b); })
-        .def("__gt__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) > b; })
-        .def("__ge__", [](const at::Tensor &a, const at::Tensor &b) { return a >= b; })
-        .def("__ge__", [](const at::Tensor &a, at::dtype b) { return a >= at::Tensor(b); })
-        .def("__ge__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) >= b; })
-        .def("__lt__", [](const at::Tensor &a, const at::Tensor &b) { return a < b; })
-        .def("__lt__", [](const at::Tensor &a, at::dtype b) { return a < at::Tensor(b); })
-        .def("__lt__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) < b; })
-        .def("__le__", [](const at::Tensor &a, const at::Tensor &b) { return a <= b; })
-        .def("__le__", [](const at::Tensor &a, at::dtype b) { return a <= at::Tensor(b); })
-        .def("__le__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) <= b; })
-        .def("__eq__", [](const at::Tensor &a, const at::Tensor &b) { return a == b; })
-        .def("__eq__", [](const at::Tensor &a, at::dtype b) { return a == at::Tensor(b); })
-        .def("__eq__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) == b; })
-        .def("__ne__", [](const at::Tensor &a, const at::Tensor &b) { return a != b; })
-        .def("__ne__", [](const at::Tensor &a, at::dtype b) { return a != at::Tensor(b); })
-        .def("__ne__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) != b; })
+        .def("__gt__", [](const at::Tensor &a, const at::Tensor &b) { return a > b; }, RELEASE_GIL)
+        .def("__gt__", [](const at::Tensor &a, at::dtype b) { return a > at::Tensor(b); }, RELEASE_GIL)
+        .def("__gt__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) > b; }, RELEASE_GIL)
+        .def("__ge__", [](const at::Tensor &a, const at::Tensor &b) { return a >= b; }, RELEASE_GIL)
+        .def("__ge__", [](const at::Tensor &a, at::dtype b) { return a >= at::Tensor(b); }, RELEASE_GIL)
+        .def("__ge__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) >= b; }, RELEASE_GIL)
+        .def("__lt__", [](const at::Tensor &a, const at::Tensor &b) { return a < b; }, RELEASE_GIL)
+        .def("__lt__", [](const at::Tensor &a, at::dtype b) { return a < at::Tensor(b); }, RELEASE_GIL)
+        .def("__lt__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) < b; }, RELEASE_GIL)
+        .def("__le__", [](const at::Tensor &a, const at::Tensor &b) { return a <= b; }, RELEASE_GIL)
+        .def("__le__", [](const at::Tensor &a, at::dtype b) { return a <= at::Tensor(b); }, RELEASE_GIL)
+        .def("__le__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) <= b; }, RELEASE_GIL)
+        .def("__eq__", [](const at::Tensor &a, const at::Tensor &b) { return a == b; }, RELEASE_GIL)
+        .def("__eq__", [](const at::Tensor &a, at::dtype b) { return a == at::Tensor(b); }, RELEASE_GIL)
+        .def("__eq__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) == b; }, RELEASE_GIL)
+        .def("__ne__", [](const at::Tensor &a, const at::Tensor &b) { return a != b; }, RELEASE_GIL)
+        .def("__ne__", [](const at::Tensor &a, at::dtype b) { return a != at::Tensor(b); }, RELEASE_GIL)
+        .def("__ne__", [](at::dtype a, const at::Tensor &b) { return at::Tensor(a) != b; }, RELEASE_GIL)
 
-        .def("__neg__", [](const at::Tensor &a) {return -a;})
-        .def("__add__", [](const at::Tensor &a, const at::Tensor &b) {return a + b;})
-        .def("__add__", [](const at::Tensor &a, at::dtype &b) {return a + b;})
-        .def("__radd__", [](const at::Tensor &a, at::dtype &b) {return a + b;})
-        .def("__sub__", [](const at::Tensor &a, const at::Tensor &b) {return a - b;})
-        .def("__sub__", [](const at::Tensor &a, at::dtype &b) {return a - b;})
-        .def("__rsub__", [](const at::Tensor &a, at::dtype &b) {   return b - a;})
-        .def("__mul__", [](const at::Tensor &a, const at::Tensor &b) {return a * b;})
-        .def("__mul__", [](const at::Tensor &a, at::dtype &b) {return a * b;})
-        .def("__rmul__", [](const at::Tensor &a, at::dtype &b) {return a * b;})
-        .def("__truediv__", [](const at::Tensor &a, const at::Tensor &b) {return a / b;})
-        .def("__truediv__", [](const at::Tensor &a, at::dtype &b) {return a / b;})
-        .def("__rtruediv__", [](const at::Tensor &a, at::dtype &b) {return b / a;})
+        .def("__neg__", [](const at::Tensor &a) {return -a;}, RELEASE_GIL)
+        .def("__add__", [](const at::Tensor &a, const at::Tensor &b) {return a + b;}, RELEASE_GIL)
+        .def("__add__", [](const at::Tensor &a, at::dtype &b) {return a + b;}, RELEASE_GIL)
+        .def("__radd__", [](const at::Tensor &a, at::dtype &b) {return a + b;}, RELEASE_GIL)
+        .def("__sub__", [](const at::Tensor &a, const at::Tensor &b) {return a - b;}, RELEASE_GIL)
+        .def("__sub__", [](const at::Tensor &a, at::dtype &b) {return a - b;}, RELEASE_GIL)
+        .def("__rsub__", [](const at::Tensor &a, at::dtype &b) {   return b - a;}, RELEASE_GIL)
+        .def("__mul__", [](const at::Tensor &a, const at::Tensor &b) {return a * b;}, RELEASE_GIL)
+        .def("__mul__", [](const at::Tensor &a, at::dtype &b) {return a * b;}, RELEASE_GIL)
+        .def("__rmul__", [](const at::Tensor &a, at::dtype &b) {return a * b;}, RELEASE_GIL)
+        .def("__truediv__", [](const at::Tensor &a, const at::Tensor &b) {return a / b;}, RELEASE_GIL)
+        .def("__truediv__", [](const at::Tensor &a, at::dtype &b) {return a / b;}, RELEASE_GIL)
+        .def("__rtruediv__", [](const at::Tensor &a, at::dtype &b) {return b / a;}, RELEASE_GIL)
 
-        .def("sign", &at::Tensor::sign)
-        .def("abs", &at::Tensor::abs)
-        .def("__abs__", &at::Tensor::abs)
-        .def("sin", &at::Tensor::sin)
-        .def("cos", &at::Tensor::cos)
-        .def("tanh", &at::Tensor::tanh)
-        .def("clamp", &at::Tensor::clamp, py::arg("min"), py::arg("max"))
-        .def("log", &at::Tensor::log)
-        .def("exp", &at::Tensor::exp)
-        .def("pow", &at::Tensor::pow, py::arg("exponent"))
-        .def("sqrt", &at::Tensor::sqrt)
+        .def("sign", &at::Tensor::sign, RELEASE_GIL)
+        .def("abs", &at::Tensor::abs, RELEASE_GIL)
+        .def("__abs__", &at::Tensor::abs, RELEASE_GIL)
+        .def("sin", &at::Tensor::sin, RELEASE_GIL)
+        .def("cos", &at::Tensor::cos, RELEASE_GIL)
+        .def("tanh", &at::Tensor::tanh, RELEASE_GIL)
+        .def("clamp", &at::Tensor::clamp, py::arg("min"), py::arg("max"), RELEASE_GIL)
+        .def("log", &at::Tensor::log, RELEASE_GIL)
+        .def("exp", &at::Tensor::exp, RELEASE_GIL)
+        .def("pow", &at::Tensor::pow, py::arg("exponent"), RELEASE_GIL)
+        .def("sqrt", &at::Tensor::sqrt, RELEASE_GIL)
 
 
 
         /*** Part V: Matrix Multiplication ***/
-        .def("matmul", &at::matmul, py::arg("other"), "Matrix multiplication of two tensors")
+        .def("matmul", &at::matmul, py::arg("other"), RELEASE_GIL, "Matrix multiplication of two tensors")
         .def("__matmul__", [](const at::Tensor &a, const at::Tensor &b) {
             return a ^ b;
-        })
+        }, RELEASE_GIL)
 
 
         /*** Part VI: Reduction and Normalization Operations ***/
-        .def("sum", &at::Tensor::sum, py::arg("dim"), py::arg("keepdims") = false, "Sum over a dimension")
-        .def("max", &at::Tensor::max, py::arg("dim"), py::arg("keepdims") = false, "Get the maximum value and its index over a dimension")
-        .def("softmax", &at::Tensor::softmax, py::arg("dim"), "Compute the softmax over a dimension")
+        .def("sum", &at::Tensor::sum, py::arg("dim"), py::arg("keepdims") = false, RELEASE_GIL, "Sum over a dimension")
+        .def("max", &at::Tensor::max, py::arg("dim"), py::arg("keepdims") = false, RELEASE_GIL, "Get the maximum value and its index over a dimension")
+        .def("softmax", &at::Tensor::softmax, py::arg("dim"), RELEASE_GIL, "Compute the softmax over a dimension")
 
 
 
@@ -277,32 +335,32 @@ PYBIND11_MODULE(tensor_impl, m) {
              "Reshape the tensor to a new shape, optionally copying data")
         .def("view", &tensor_view_wrapper,
              "Return a view of the tensor with a new shape")
-        .def("transpose", &at::Tensor::transpose, py::arg("dim0"), py::arg("dim1"),
+        .def("transpose", &at::Tensor::transpose, py::arg("dim0"), py::arg("dim1"), RELEASE_GIL,
          "Transpose the tensor along two dimensions")
         .def("split", [](const at::Tensor &self, int dim, int split_size) {
             // 分割 tensor
             return self.split(dim, split_size);
-        }, py::arg("dim"), py::arg("split_size"), "Split the tensor into chunks along a dimension")
+        }, py::arg("dim"), py::arg("split_size"), RELEASE_GIL, "Split the tensor into chunks along a dimension")
         .def("split", [](const at::Tensor &self, int dim, const std::vector<int> &split_sections) {
             // 分割 tensor
             return self.split(dim, split_sections);
-        }, py::arg("dim"), py::arg("split_sections"), "Split the tensor into sections along a dimension")
+        }, py::arg("dim"), py::arg("split_sections"), RELEASE_GIL, "Split the tensor into sections along a dimension")
         .def_static("stack", [](const std::vector<at::Tensor> &tensors, int dim = 0) {
             // 堆叠 tensor
             return at::Tensor().stack(tensors, dim);
-        }, py::arg("tensors"), py::arg("dim") = 0, "Stack a list of tensors along a new dimension")
+        }, py::arg("tensors"), py::arg("dim") = 0, RELEASE_GIL, "Stack a list of tensors along a new dimension")
         .def_static("cat", [](const std::vector<at::Tensor> &tensors, int dim = 0) {
             // 拼接 tensor
             return at::Tensor().cat(tensors, dim);
-        }, py::arg("tensors"), py::arg("dim") = 0, "Concatenate a list of tensors along a dimension")
+        }, py::arg("tensors"), py::arg("dim") = 0, RELEASE_GIL, "Concatenate a list of tensors along a dimension")
         .def_static("broadcast", [](const at::Tensor &lhs, const at::Tensor &rhs) {
             // 广播两个 tensor
             return at::Tensor().broadcast(lhs, rhs);
-        }, py::arg("lhs"), py::arg("rhs"), "Broadcast two tensors to a common shape")
+        }, py::arg("lhs"), py::arg("rhs"), RELEASE_GIL, "Broadcast two tensors to a common shape")
         .def_static("broadcast", [](const std::vector<at::Tensor> &tensors) {
             // 广播多个 tensor
             return at::Tensor().broadcast(tensors);
-        }, py::arg("tensors"), "Broadcast a list of tensors to a common shape")
+        }, py::arg("tensors"), RELEASE_GIL, "Broadcast a list of tensors to a common shape")
         // 增加.T属性
         .def_property_readonly("T", [](const at::Tensor &self) {
             // 通常 2D tensor 的 .T 是 swap 0,1 轴；更高维可按需扩展
@@ -310,33 +368,33 @@ PYBIND11_MODULE(tensor_impl, m) {
         }, "Matrix transpose (swap axes 0 and 1)")
         .def_static("ones", [](std::vector<int> shape){
             return at::ones(shape);
-        })
+        }, RELEASE_GIL)
         .def_static("ones_like", [](const at::Tensor &self) {
             return at::ones_like(self);
-        }, "Create a tensor of ones with the same shape and type as another tensor")
+        }, RELEASE_GIL, "Create a tensor of ones with the same shape and type as another tensor")
         .def_static("zeros", [](std::vector<int> shape){
             return at::zeros(shape);
-        })
+        }, RELEASE_GIL)
         .def_static("zeros_like", [](const at::Tensor &self) {
             return at::zeros_like(self);
-        }, "Create a tensor of zeros with the same shape and type as another tensor")
+        }, RELEASE_GIL, "Create a tensor of zeros with the same shape and type as another tensor")
         .def_static("empty", [](std::vector<int> shape){
             return at::empty(shape);
-        }, "Create an empty tensor with the specified shape and uninitialized data")
+        }, RELEASE_GIL, "Create an empty tensor with the specified shape and uninitialized data")
         .def_static("empty_like", [](const at::Tensor &self) {
             return at::empty_like(self);
-        }, "Create an empty tensor with the same shape and type as another tensor")
+        }, RELEASE_GIL, "Create an empty tensor with the same shape and type as another tensor")
         .def_static("randn", [](std::vector<int> shape){
             return at::randn(shape);
-        }, "Create a tensor with random values from a normal distribution")
+        }, RELEASE_GIL, "Create a tensor with random values from a normal distribution")
         .def_static("randn_like", [](const at::Tensor &self) {
             return at::randn_like(self);
-        }, "Create a tensor with random values from a normal distribution with the same shape and type as another tensor")
+        }, RELEASE_GIL, "Create a tensor with random values from a normal distribution with the same shape and type as another tensor")
 
         /* week 3 adds on*/
 
-        .def("mean", &at::Tensor::mean, py::arg("dim"), py::arg("keepdims") = false, "Calculate the mean along a dimension")
-        .def("var", &at::Tensor::var, py::arg("dim"), py::arg("keepdims") = false, py::arg("unbiased") = true, "Calculate the variance along a dimension")
+        .def("mean", &at::Tensor::mean, py::arg("dim"), py::arg("keepdims") = false, RELEASE_GIL, "Calculate the mean along a dimension")
+        .def("var", &at::Tensor::var, py::arg("dim"), py::arg("keepdims") = false, py::arg("unbiased") = true, RELEASE_GIL, "Calculate the variance along a dimension")
         ;
 
     /*** Part II: utils, clone, make contiguous and copy_ ***/
@@ -348,132 +406,132 @@ PYBIND11_MODULE(tensor_impl, m) {
     // __eq__ & __ne__
     m.def("__eq__", [](const at::Tensor &a, const at::Tensor &b) {
         return a == b;
-    }, py::arg("a"), py::arg("b"), "Element-wise equality comparison");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise equality comparison");
     m.def("__eq__", [](const at::Tensor &a, at::dtype b) {
         return a == at::Tensor(b);
-    }, py::arg("a"), py::arg("b"), "Element-wise equality comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise equality comparison with scalar");
     m.def("__eq__", [](at::dtype a, const at::Tensor &b) {
         return at::Tensor(a) == b;
-    }, py::arg("a"), py::arg("b"), "Element-wise equality comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise equality comparison with scalar");
     m.def("__ne__", [](const at::Tensor &a, const at::Tensor &b) {
         return a != b;
-    }, py::arg("a"), py::arg("b"), "Element-wise inequality comparison");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise inequality comparison");
     m.def("__ne__", [](const at::Tensor &a, at::dtype b) {
         return a != at::Tensor(b);
-    }, py::arg("a"), py::arg("b"), "Element-wise inequality comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise inequality comparison with scalar");
     m.def("__ne__", [](at::dtype a, const at::Tensor &b) {
         return at::Tensor(a) != b;
-    }, py::arg("a"), py::arg("b"), "Element-wise inequality comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise inequality comparison with scalar");
 
     // __lt__ & __le__
     m.def("__lt__", [](const at::Tensor &a, const at::Tensor &b) {
         return a < b;
-    }, py::arg("a"), py::arg("b"), "Element-wise less than comparison");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise less than comparison");
     m.def("__lt__", [](const at::Tensor &a, at::dtype b) {
         return a < at::Tensor(b);
-    }, py::arg("a"), py::arg("b"), "Element-wise less than comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise less than comparison with scalar");
     m.def("__lt__", [](at::dtype a, const at::Tensor &b) {
         return at::Tensor(a) < b;
-    }, py::arg("a"), py::arg("b"), "Element-wise less than comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise less than comparison with scalar");
     m.def("__le__", [](const at::Tensor &a, const at::Tensor &b) {
         return a <= b;
-    }, py::arg("a"), py::arg("b"), "Element-wise less than or equal to comparison");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise less than or equal to comparison");
     m.def("__le__", [](const at::Tensor &a, at::dtype b) {
         return a <= at::Tensor(b);
-    }, py::arg("a"), py::arg("b"), "Element-wise less than or equal to comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise less than or equal to comparison with scalar");
     m.def("__le__", [](at::dtype a, const at::Tensor &b) {
         return at::Tensor(a) <= b;
-    }, py::arg("a"), py::arg("b"), "Element-wise less than or equal to comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise less than or equal to comparison with scalar");
 
     // __gt__ & __ge__
     m.def("__gt__", [](const at::Tensor &a, const at::Tensor &b) { 
         return a > b;
-    }, py::arg("a"), py::arg("b"), "Element-wise greater than comparison");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise greater than comparison");
     m.def("__gt__", [](const at::Tensor &a, at::dtype b) {
         return a > at::Tensor(b);
-    }, py::arg("a"), py::arg("b"), "Element-wise greater than comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise greater than comparison with scalar");
     m.def("__gt__", [](at::dtype a, const at::Tensor &b) {
         return at::Tensor(a) > b;
-    }, py::arg("a"), py::arg("b"), "Element-wise greater than comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise greater than comparison with scalar");
     m.def("__ge__", [](const at::Tensor &a, const at::Tensor &b) {
         return a >= b;
-    }, py::arg("a"), py::arg("b"), "Element-wise greater than or equal to comparison");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise greater than or equal to comparison");
     m.def("__ge__", [](const at::Tensor &a, at::dtype b) {
         return a >= at::Tensor(b);
-    }, py::arg("a"), py::arg("b"), "Element-wise greater than or equal to comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise greater than or equal to comparison with scalar");
     m.def("__ge__", [](at::dtype a, const at::Tensor &b) {
         return at::Tensor(a) >= b;
-    }, py::arg("a"), py::arg("b"), "Element-wise greater than or equal to comparison with scalar");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Element-wise greater than or equal to comparison with scalar");
 
 
     m.def("sign", [](const at::Tensor& t) {
         return t.sign();
-    });
+    }, RELEASE_GIL);
     m.def("sin", [](const at::Tensor& t) {
         return t.sin();
-    });
+    }, RELEASE_GIL);
     m.def("cos", [](const at::Tensor& t) {
         return t.cos();
-    });
+    }, RELEASE_GIL);
     m.def("tanh", [](const at::Tensor& t) {
         return t.tanh();
-    });
+    }, RELEASE_GIL);
     m.def("clamp", [](const at::Tensor& t, const at::dtype& min, const at::dtype& max) {
         return t.clamp(min, max);
-    }, py::arg("t"), py::arg("min"), py::arg("max"));
+    }, py::arg("t"), py::arg("min"), py::arg("max"), RELEASE_GIL);
     m.def("log", [](const at::Tensor& t) {
         return t.log();
-    }, py::arg("t"));
+    }, py::arg("t"), RELEASE_GIL);
     m.def("exp", [](const at::Tensor& t) {
         return t.exp();
-    });
+    }, RELEASE_GIL);
     m.def("pow", [](const at::Tensor& t, at::dtype exponent) {
         return t.pow(exponent);
-    }, py::arg("t"), py::arg("exponent"));
+    }, py::arg("t"), py::arg("exponent"), RELEASE_GIL);
     m.def("sqrt", [](const at::Tensor& t) {
         return t.sqrt();
-    });
+    }, RELEASE_GIL);
 
     /*** Part VI: Reduction and Normalization Operations ***/
     m.def("dot", [](const at::Tensor &a, const at::Tensor &b) {
         return a ^ b;
-    }, py::arg("a"), py::arg("b"), "Dot product of two tensors");
-    m.def("sum", &at::Tensor::sum, py::arg("t"), py::arg("dim"), py::arg("keepdims") = false, "Sum over a dimension");
-    m.def("max", &at::Tensor::max, py::arg("t"), py::arg("dim"), py::arg("keepdims") = false, "Get the maximum value and its index over a dimension");
-    m.def("softmax", &at::Tensor::softmax, py::arg("t"), py::arg("dim"), "Compute the softmax over a dimension");
+    }, py::arg("a"), py::arg("b"), RELEASE_GIL, "Dot product of two tensors");
+    m.def("sum", &at::Tensor::sum, py::arg("t"), py::arg("dim"), py::arg("keepdims") = false, RELEASE_GIL, "Sum over a dimension");
+    m.def("max", &at::Tensor::max, py::arg("t"), py::arg("dim"), py::arg("keepdims") = false, RELEASE_GIL, "Get the maximum value and its index over a dimension");
+    m.def("softmax", &at::Tensor::softmax, py::arg("t"), py::arg("dim"), RELEASE_GIL, "Compute the softmax over a dimension");
 
     /*** Part VII: Shape Manipulation ***/
-    m.def("permute", &at::Tensor::permute, py::arg("t"), py::arg("dims"), "Permute the dimensions of the tensor");
-    m.def("transpose", &at::Tensor::transpose, py::arg("t"), py::arg("dim0"), py::arg("dim1"), "Transpose the tensor along two dimensions");
-    m.def("narrow", &at::Tensor::narrow, py::arg("t"), py::arg("dim"), py::arg("start"), py::arg("length"), py::arg("copy") = false, "Narrow the tensor along a dimension");
-    m.def("chunk", &at::Tensor::chunk, py::arg("t"), py::arg("chunks"), py::arg("dim"), "Split the tensor into chunks along a dimension");
+    m.def("permute", &at::Tensor::permute, py::arg("t"), py::arg("dims"), RELEASE_GIL, "Permute the dimensions of the tensor");
+    m.def("transpose", &at::Tensor::transpose, py::arg("t"), py::arg("dim0"), py::arg("dim1"), RELEASE_GIL, "Transpose the tensor along two dimensions");
+    m.def("narrow", &at::Tensor::narrow, py::arg("t"), py::arg("dim"), py::arg("start"), py::arg("length"), py::arg("copy") = false, RELEASE_GIL, "Narrow the tensor along a dimension");
+    m.def("chunk", &at::Tensor::chunk, py::arg("t"), py::arg("chunks"), py::arg("dim"), RELEASE_GIL, "Split the tensor into chunks along a dimension");
     m.def("split", [](const at::Tensor &self, int split_size, int dim = 0) {
         return self.split(dim, split_size);
-    }, py::arg("t"), py::arg("split_size"), py::arg("dim") = 0, "Split the tensor into chunks of a given size along a dimension");
+    }, py::arg("t"), py::arg("split_size"), py::arg("dim") = 0, RELEASE_GIL, "Split the tensor into chunks of a given size along a dimension");
     m.def("split", [](const at::Tensor &self, const shape_t &split_sizes, int dim = 0) {
         return self.split(dim, split_sizes);
-    }, py::arg("t"), py::arg("split_sizes"), py::arg("dim") = 0, "Split the tensor into chunks of specified sizes along a dimension");
+    }, py::arg("t"), py::arg("split_sizes"), py::arg("dim") = 0, RELEASE_GIL, "Split the tensor into chunks of specified sizes along a dimension");
     m.def("stack", [](const std::vector<at::Tensor> &tensors, int dim = 0) {
         return at::Tensor().stack(tensors, dim);
-    }, py::arg("tensors"), py::arg("dim") = 0, "Stack a list of tensors along a new dimension");
+    }, py::arg("tensors"), py::arg("dim") = 0, RELEASE_GIL, "Stack a list of tensors along a new dimension");
     m.def("cat", [](const std::vector<at::Tensor> &tensors, int dim = 0) {
         return at::Tensor().cat(tensors, dim);
-    }, py::arg("tensors"), py::arg("dim") = 0, "Concatenate a list of tensors along a dimension");
+    }, py::arg("tensors"), py::arg("dim") = 0, RELEASE_GIL, "Concatenate a list of tensors along a dimension");
     m.def("squeeze", [](const at::Tensor &self, int dim = -1) {
         return self.squeeze(dim);
-    }, py::arg("t"), py::arg("dim"), "Remove a dimension of size 1 from the tensor");
+    }, py::arg("t"), py::arg("dim"), RELEASE_GIL, "Remove a dimension of size 1 from the tensor");
     m.def("unsqueeze", [](const at::Tensor &self, int dim = 0) {
         return self.unsqueeze(dim);
-    }, py::arg("t"), py::arg("dim"), "Add a dimension of size 1 to the tensor");
+    }, py::arg("t"), py::arg("dim"), RELEASE_GIL, "Add a dimension of size 1 to the tensor");
     m.def("broadcast_to", [](const at::Tensor &self, const shape_t &shape) {
         return self.broadcast_to(shape);
-    }, py::arg("t"), py::arg("shape"), "Broadcast the tensor to a new shape");
+    }, py::arg("t"), py::arg("shape"), RELEASE_GIL, "Broadcast the tensor to a new shape");
     m.def("broadcast_tensors", [](const at::Tensor &lhs, const at::Tensor &rhs) {
         return at::Tensor().broadcast(lhs, rhs);
-    }, py::arg("lhs"), py::arg("rhs"), "Broadcast two tensors to a common shape");
+    }, py::arg("lhs"), py::arg("rhs"), RELEASE_GIL, "Broadcast two tensors to a common shape");
     m.def("broadcast_tensors", [](const std::vector<at::Tensor> &tensors) {
         return at::Tensor().broadcast(tensors);
-    }, py::arg("tensors"), "Broadcast a list of tensors to a common shape");
+    }, py::arg("tensors"), RELEASE_GIL, "Broadcast a list of tensors to a common shape");
     
 
     /*** Part VIII: Other Helper Constuctors: ***/
@@ -482,37 +540,37 @@ PYBIND11_MODULE(tensor_impl, m) {
     }, py::arg("value"), py::arg("dim"), "Create a singleton tensor with a single value and specified dimension");
     m.def("ones", [](const shape_t &shape) {
         return at::ones(shape);
-    }, py::arg("shape"));
+    }, py::arg("shape"), RELEASE_GIL);
     m.def("ones_like", [](const at::Tensor &self) {
         return at::ones_like(self);
-    }, py::arg("self"), "Create a tensor of ones with the same shape and type as another tensor");
+    }, py::arg("self"), RELEASE_GIL, "Create a tensor of ones with the same shape and type as another tensor");
     m.def("zeros", [](const shape_t &shape) {
         return at::zeros(shape);
-    }, py::arg("shape"));
+    }, py::arg("shape"), RELEASE_GIL);
     m.def("zeros_like", [](const at::Tensor &self) {
         return at::zeros_like(self);
-    }, py::arg("self"), "Create a tensor of zeros with the same shape and type as another tensor");
+    }, py::arg("self"), RELEASE_GIL, "Create a tensor of zeros with the same shape and type as another tensor");
     m.def("randn", [](const shape_t &shape) {
         return at::randn(shape);
-    }, py::arg("shape"));
+    }, py::arg("shape"), RELEASE_GIL);
     m.def("randn_like", [](const at::Tensor &self) {
         return at::randn_like(self);
-    }, py::arg("self"), "Create a tensor of random values with the same shape and type as another tensor");
+    }, py::arg("self"), RELEASE_GIL, "Create a tensor of random values with the same shape and type as another tensor");
     m.def("empty", [](const shape_t &shape) {
         return at::empty(shape);
-    }, py::arg("shape"), "Create an empty tensor with the specified shape");
+    }, py::arg("shape"), RELEASE_GIL, "Create an empty tensor with the specified shape");
     m.def("empty_like", [](const at::Tensor &self) {
         return at::empty_like(self);
-    }, py::arg("self"), "Create an empty tensor with the same shape and type as another tensor");
+    }, py::arg("self"), RELEASE_GIL, "Create an empty tensor with the same shape and type as another tensor");
     m.def("arange", [](at::dtype start, at::dtype end, int step = 1) {
         return at::arange(start, end, step);
-    }, py::arg("start"), py::arg("end"), py::arg("step") = 1, "Create a tensor with a range of values from start to end with a specified step");
+    }, py::arg("start"), py::arg("end"), py::arg("step") = 1, RELEASE_GIL, "Create a tensor with a range of values from start to end with a specified step");
     m.def("range", [](at::dtype start, at::dtype end, int step = 1) {
         return at::range(start, end, step);
-    }, py::arg("start"), py::arg("end"), py::arg("step") = 1, "Create a tensor with a range of values from start to end with a specified step");
+    }, py::arg("start"), py::arg("end"), py::arg("step") = 1, RELEASE_GIL, "Create a tensor with a range of values from start to end with a specified step");
     m.def("linspace", [](at::dtype start, at::dtype end, int num_steps) {
         return at::linspace(start, end, num_steps);
-    }, py::arg("start"), py::arg("end"), py::arg("num_steps"), "Create a tensor with linearly spaced values from start to end with a specified number of steps");
+    }, py::arg("start"), py::arg("end"), py::arg("num_steps"), RELEASE_GIL, "Create a tensor with linearly spaced values from start to end with a specified number of steps");
 }
 
 /* Utils */
@@ -560,7 +618,8 @@ std::vector<slice_t> parse_index(const Tensor& self, const py::object &idx) {
 
     if (py::isinstance<py::tuple>(idx)) {
         auto t = idx.cast<py::tuple>();
-        size_t nd = self.dim();
+        
+        // For pure slice/int cases (non-mixed indexing)
         for (size_t i = 0; i < t.size(); ++i) {
             auto item = t[i];
             if (py::isinstance<py::int_>(item)) {

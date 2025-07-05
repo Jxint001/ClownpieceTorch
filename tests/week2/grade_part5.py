@@ -23,7 +23,7 @@ def max_op(impl=torch):
 
     return a.grad, b, c
 
-@testcase(name="sum_op", score=5)
+@testcase(name="sum_op", score=10)
 def sum_op(impl=torch):
     a = impl.Tensor(test_data_basic)
     a.requires_grad_()
@@ -39,7 +39,7 @@ def sum_op(impl=torch):
     
     return a.grad, b, c, d
 
-@testcase(name="sum_op_hard", score=5)
+@testcase(name="sum_op_hard", score=10)
 def sum_op_hard(impl=torch):
     a = impl.Tensor(test_sum_op_hard)
     a.requires_grad_()

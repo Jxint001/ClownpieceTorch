@@ -21,6 +21,15 @@ def ones_like1(impl):
     t = impl.ones_like(ref)
     return t
 
+@testcase(name="ones_like: scalar", score=10)
+
+def ones_like_scalar(impl):
+    ref = impl.zeros([])
+    t = impl.ones_like(ref)
+    print("ref=", ref)
+    print("t=", t)
+    return t
+
 @testcase(name="zeros: shape=[3]", score=10)
 
 def zeros1(impl):
@@ -101,6 +110,7 @@ def linspace2(impl):
 def testsets_part8():
     ones1()
     ones_like1()
+    ones_like_scalar()
     zeros1()
     zeros_like1()
     randn1()

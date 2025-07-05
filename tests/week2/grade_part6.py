@@ -19,7 +19,7 @@ def permute_op(impl=torch):
     a.requires_grad_()
     perm = [1, 0]  # Swap axes
     b = a.permute(perm)
-    b.backward(impl.ones_like(b))
+    b.backward(b)
     return a.grad, b
 
 @testcase(name="transpose_op", score=10)
@@ -28,7 +28,7 @@ def transpose_op(impl=torch):
     a.requires_grad_()
     dim0, dim1 = 0, 1
     b = a.transpose(dim0, dim1)
-    b.backward(impl.ones_like(b))
+    b.backward(b)
     return a.grad, b
 
 @testcase(name="reshape_op", score=10)
@@ -37,7 +37,7 @@ def reshape_op(impl=torch):
     a.requires_grad_()
     shape = [3, 2]
     b = a.reshape(shape)
-    b.backward(impl.ones_like(b))
+    b.backward(b)
     return a.grad, b
 
 @testcase(name="view_op", score=10)
@@ -46,7 +46,7 @@ def view_op(impl=torch):
     a.requires_grad_()
     shape = [3, 2]
     b = a.view(shape)
-    b.backward(impl.ones_like(b))
+    b.backward(b)
     return a.grad, b
 
 @testcase(name="narrow_op", score=10)
@@ -55,7 +55,7 @@ def narrow_op(impl=torch):
     a.requires_grad_()
     dim, start, length = 1, 0, 2
     b = a.narrow(dim, start, length)
-    b.backward(impl.ones_like(b))
+    b.backward(b)
     return a.grad, b
 
 @testcase(name="chunk_op", score=10)
