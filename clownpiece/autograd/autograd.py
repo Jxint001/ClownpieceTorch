@@ -1,7 +1,7 @@
 from typing import Dict, Iterable, List, Optional, Union, Any
 
 from clownpiece.tensor import Tensor, ones_like, zeros_like
-from clownpiece.utils import wrap_tuple
+from clownpiece.utils_ import wrap_tuple
 
 """
     Autograd Module

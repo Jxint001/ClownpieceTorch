@@ -787,20 +787,20 @@ def empty(shape, requires_grad: bool = False) -> Tensor:
 def empty_like(tensor: Tensor, requires_grad: bool = False) -> Tensor:
   return Tensor.empty(tensor.shape, requires_grad=requires_grad)
 
-def zeros(shape, requires_grad=None):
+def zeros(shape, requires_grad=False):
   return Tensor.zeros(shape, requires_grad=requires_grad)
 
-def zeros_like(tensor, requires_grad=None):
+def zeros_like(tensor: Tensor, requires_grad=False) -> Tensor:
   return Tensor.zeros(tensor.shape, requires_grad=requires_grad)
 
-def ones(shape, requires_grad=None):
+def ones(shape, requires_grad=False):
   return Tensor.ones(shape, requires_grad=requires_grad)
 
-def ones_like(tensor, requires_grad=None):
+def ones_like(tensor: Tensor, requires_grad=False) -> Tensor:
   return Tensor.ones(tensor.shape, requires_grad=requires_grad)
 
-def randn(shape, requires_grad=None):
+def randn(shape, requires_grad=False):
   return Tensor.randn(shape, requires_grad=requires_grad)
 
-def randn_like(tensor, requires_grad=None):
+def randn_like(tensor, requires_grad=False):
   return Tensor.randn(tensor.shape, requires_grad=requires_grad)
