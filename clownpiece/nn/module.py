@@ -1,5 +1,8 @@
-from typing import Dict, Union
+# Core Module System
+
+from typing import Dict, Iterable, Tuple, Union, Optional
 from clownpiece import Tensor, zeros_like
+from clownpiece.tensor import empty_like
 
 
 class Parameter(Tensor):
@@ -12,48 +15,32 @@ class Buffer(Tensor):
     super().__init__(data, requires_grad=False)
 
 
-class Module():
-  _init_called: bool = False
-  
-  _parameters: dict[str, Parameter] = {}
-  _buffers: dict[str, Tensor] = {}
-  _modules: dict[str, 'Module'] = {}
-  
+class Module(object):
   def __init__(self):
-    self._init_called = True
-    
-    self._parameters = {}
-    self._buffers = {}
-    self._modules = {}
-    
-  def __setattr__(self, name: str, value):
-    # remove first
-    if name in self._parameters:
-      del self._parameters[name]
-    if name in self._buffers:
-      del self._buffers[name]
-    if name in self._modules:
-      del self._modules[name]
-    
-    # add 
-    if isinstance(value, Parameter):
-      self._parameters[name] = value
-    elif isinstance(value, Tensor):
-      self._buffers[name] = value
-    elif isinstance(value, Module):
-      self._modules[name] = value
-    else:
-      super().__setattr__(name, value)
-      
-  def __getattribute__(self, name: str):
-    if name in self._parameters:
-      return self._parameters[name]
-    elif name in self._buffers:
-      return self._buffers[name]
-    elif name in self._modules:
-      return self._modules[name]
-    else:
-      return super().__getattribute__(name)
+    # It's a good practice to add a mechanism to enforce that:
+    #   All subclasses of Module must call super().__init__ in their __init__
+    #   (User often forgets to do so!)
+    # For example:
+    #   add a boolean variable _init_called, 
+    #   and check at beginning of __setattr__ call.
+    #
+    # this mechanism is optional and does not account for score.
+
+    pass
+
+  def train(self, flag: bool = True):
+    # set module and submodule to training = flag
+    pass
+
+  def eval(self):
+    # set module and submodule to inferencing mode
+    pass
+
+  def __setattr__(self, name, value):
+    pass
+
+  def __getattr__(self, name):
+    pass
     
   """
     Forward
@@ -66,90 +53,81 @@ class Module():
     return self.forward(*args, **kwargs)
 
   """
-    Parameters
+    Parameter
+  """
+  def register_parameter(self, name: str, param: Optional[Parameter]):
+    # why does this function even exist? 
+    # well, sometimes we want to register None as placeholder for disabled optioanl parameters. (e.g., bias in Linear)
+    pass
+
+  def parameters(self, recursive: bool=True) -> Iterable[Parameter]:
+    # return a generator of all parameters in this module
+    # yield immediate parameters first,
+    # if recursive, then yield parameters from children.
+
+    # HINT: use `yield` and `yield from` semantic
+    pass
+
+  def named_parameters(self, recursive: bool=True) -> Iterable[Tuple[str, Parameter]]:
+    # similar to parameters, but return a name along with the parameter
+    # the name is obtained by joining the recurisve attr name with '.'
+    # for example
+    """
+      class A(Module):
+        a: Parameter
+        b: B
+
+      class B(Moudle)
+        c: Parameter
+      
+      Then, A.named_parameters() -> [
+        ("a", ...),
+        ("b.c", ...)
+      ]
+    """
+    pass
+
+  """
+    Buffer
   """
 
-  def parameters(self):
-    for param in self._parameters.values():
-      yield param
-    for module in self._modules.values():
-      yield from module.parameters()
+  def register_buffer(self, name: str, buffer: Optional[Buffer]):
+    pass
 
-  def named_parameters(self):
-    return self._named_parameters(self.__class__.__name__)
-  
-  def _named_parameters(self, prefix: str):
-    for name, param in self._parameters.items():
-      yield prefix + "." + name, param
-    for name, module in self._modules.items():
-      yield from module._named_parameters(prefix + "." + name)
+  def buffers(self, recursive: bool=True) -> Iterable[Buffer]:
+    pass
+
+  def named_buffers(self, recursive: bool=True) -> Iterable[Tuple[str, Buffer]]:
+    pass
 
   """
-    Buffers
+    Modules
   """
 
-  def buffers(self):
-    for buffer in self._buffers.values():
-      yield buffer
-    for module in self._modules.values():
-      yield from module.buffers()
-  
-  def named_buffers(self):
-    return self._named_buffers(self.__class__.__name__)
-  
-  def _named_buffers(self, prefix: str):
-    for name, buffer in self._buffers.items():
-      yield prefix + "." + name, buffer
-    for name, module in self._modules.items():
-      yield from module._named_buffers(prefix + "." + name)
+  def register_modules(self, module: Optional["Module"]):
+    pass
 
+  def modules(self, recursive: bool=True) -> Iterable["Module"]:
+    pass
+
+  def named_modules(self, recursive: bool=True) -> Iterable["Module"]:
+    pass
+    
   """
     State Dict
   """
 
   def state_dict(self) -> Dict:
-    return self._state_dict(self.__class__.__name__)
-  
-  def _state_dict(self, prefix: str) -> Dict[Union[Parameter, Buffer]]:
-    state = {}
-    for name, param in self._parameters.items():
-      state[prefix + "." + name] = param.data
-    for name, buffer in self._buffers.items():
-      state[prefix + "." + name] = buffer.data
-    for name, module in self._modules.items():
-      state.update(module._state_dict(prefix + "." + name))
-    return state
+    pass
+
+  def load_state_dict(self, state: Dict[str, Tensor], strict: bool = True):
+    pass
     
-  def load_state_dict(self, state: Dict[Union[Parameter, Buffer]], strict: bool = True):
-    self._load_state_dict(self, state=state, strict=strict)
-    
-  def _load_state_dict(self, state: Dict, strict: bool) -> int:
-    self_name = self.__class__.__name__    
-    _state = {
-      k[len(self_name + "."):]: v 
-      for k, v in state.items() if k.startswith(self_name + ".")
-    }
-    if strict and len(_state) != len(state):
-      raise RuntimeError("load_state_dict: irrelevant key")
-    state = _state
-    
-    for name, param in self._parameters.items():
-      if name in state:
-        param.data = state[name]
-      elif strict:
-        raise RuntimeError(f"load_state_dict: missing key {self_name}.{name}") 
-      
-    for name, buffer in self._buffers.items():
-      if name in state:
-        buffer.data = state[name]
-      elif strict:
-        raise RuntimeError(f"load_state_dict: missing key {self_name}.{name}")
-      
-    for name, module in self._modules.items():
-      module._load_state_dict(_state)
-      state = {
-        k: v for k, v in state.items() if not k.startswith(name + ".")
-      }
-      
-    if strict and len(state) != 0:
-      raise RuntimeError(f"load_state_dict: irrelevant key")
+  """
+    Printing
+  """
+  def __repr__(self) -> str:
+    pass
+
+  def extra_repr(self) -> str:
+    return ""

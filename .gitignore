@@ -195,3 +195,9 @@ cython_debug/
 
 .local/
 .vscode/
+
+test.py
+tests/**/data/
+data/
+tests/week3/minist/data/
+tests/week4/fashion-minist/data/
