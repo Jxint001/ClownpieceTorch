@@ -85,19 +85,24 @@ def simple_slice2(impl = torch):
     a = impl.Tensor(lst)
     return (a[1:3][2:4], a[0:2][1:3], a[1:4][0:2], 
             a[2:5][1:4], a[0:5][0:5], a[1:3][1:5], 
-            a[2:4][0:-1], a[1:-2][1:-3])
+            a[2:4][0:-1], a[1:-2][1:-3], a[:][0])
     
 @testcase(name="complex_slice: 2D tensor", score=10)
 
 def complex_slice(impl = torch):
     
     lst =[[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20], [21, 22, 23, 24, 25]]
-    a= impl.Tensor(lst)
+    lst2 = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]
+    a = impl.Tensor(lst)
+    b = impl.Tensor(lst2)
     ret1 = a[0, 1:3]
     ret2 = a[:, 2:5]
+    ret3 = b[:, 0]
     
-    return ret1, ret2
-    
+    print(ret3)
+
+    return ret1, ret2, ret3
+
 @testcase(name="is_contiguous2: True case", score=10)
 
 def is_contiguous2(impl = torch):
