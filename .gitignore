@@ -201,3 +201,9 @@ tests/**/data/
 data/
 tests/week3/minist/data/
 tests/week4/fashion-minist/data/
+
+command
+
+structure.md
+
+tests/

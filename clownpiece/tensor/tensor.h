@@ -59,14 +59,23 @@ class Tensor {
  protected:
   shape_t shape_;
   stride_t stride_;
-  int offset_;
+  int offset_ = 0;
   Storage storage_;
 
  private:
   /*
     other helper member variables/functions
   */
+  int numel_;
   friend int print_tensor_data_recursive(std::ostream& os, const Tensor& tensor, int dim_index, int flat_data_index, std::string prefix);
+  friend inline int logidx_to_phyidx(const Tensor& tensor, int logidx);
+  friend inline void calc_numel_(const shape_t& shape, int& numel_);
+  friend inline void fill_in_stride(const shape_t& shape, stride_t& stride);
+  friend inline int get_phyidx_in_scatter_(int dim /* 0 based */, const Tensor& index, const Tensor& self, int org_idx /* no need range check */);
+  Tensor apply_unary_op(std::function<dtype(dtype)> op) const;
+  Tensor apply_binary_op(std::function<dtype(dtype, dtype)> op, const Tensor& rhs) const;
+  friend inline Tensor matrix_mult(const Tensor& a, const Tensor& b);
+  friend inline Tensor strict_2d_matmul(const Tensor& l, const Tensor& r);
 
  public:
   /*

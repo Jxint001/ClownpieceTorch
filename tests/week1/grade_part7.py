@@ -56,6 +56,7 @@ def transpose2(impl=torch):
 @testcase(name="reshape1_noerror: all reshape/view should succeed", score=10)
 
 def reshape1_noerror(impl=torch):
+    # print("reshape1=============================================", flush=True)
     
     a0 = impl.Tensor([[1, 2, 3, 4], [5, 6, 7, 8]])
     r0 = a0.reshape(-1,)
@@ -80,12 +81,13 @@ def reshape1_noerror(impl=torch):
     c = impl.Tensor([1, 2, 3, 4, 5, 6])
     r6 = c.reshape((-1, 2))
     v4 = c.view((-1, 2))
-
+    # print("reshape1=============================================", flush=True)
     return (r0, r1, v1, r2, v2, r3, r4, r6, v4)
 
 @testcase(name="reshape1_error: reshape/view with expected error", score=10)
 
 def reshape1_error(impl=torch):
+    #print("reshapeee=============================================", flush=True)
     # view on non-contiguous
     a = impl.Tensor([[1,2],[3,4],[5,6]])
     d2 = impl.transpose(a, dim0 = 0, dim1 = 1)
@@ -113,12 +115,15 @@ def reshape1_error(impl=torch):
 @testcase(name="reshape2: reshape/view edge cases", score=10)
 
 def reshape2(impl=torch):
+    #print("reshape2=============================================", flush=True)
     # Reshape of scalar to (1,) and back (0-dimensional tensor)
     if impl.__name__ == "torch":
         a = impl.tensor(3)
     else:
         a = impl.Tensor(3)
+    #print("start reshape", flush=True)
     r1 = a.reshape(())
+    #print("ok", flush=True)
     v1 = a.view(())
     r2 = a.reshape((1,))
     v2 = a.view((1,))
@@ -583,8 +588,8 @@ def broadcast_pair_case3(impl):
 @testcase(name="broadcast_pair_case4", score=10)
 
 def broadcast_pair_case4(impl):
-    e = impl.Tensor([[1, 2, 3], [4, 5, 6]])
-    c = impl.Tensor([100, 200, 300])
+    e = impl.Tensor([[1, 2, 3], [4, 5, 6]]) # shape=(2,3)
+    c = impl.Tensor([100, 200, 300])        # shape=(3,)
     try:
         result = impl.broadcast_tensors(e, c)
     except Exception:
@@ -619,48 +624,81 @@ def broadcast_pair_case6(impl):
 
 def testsets_part7():
     permute1()
-    
+    sys.stdout.flush()
+
     transpose1()
+    sys.stdout.flush()
     transpose2() 
+    sys.stdout.flush()
     # Part of testcase transpose2() is disabled due to differences in PyTorch versions.
     # Note: PyTorch's clone automatically makes the tensor contiguous, so the test is not valid.
     
     reshape1_noerror()
+    sys.stdout.flush()
     reshape1_error()
+    sys.stdout.flush()
     reshape2()
+    sys.stdout.flush()
     
     narrow1_noerror()
+    sys.stdout.flush()
     narrow1_error()
+    sys.stdout.flush()
     
     chunk1()
+    sys.stdout.flush()
     chunk2()
+    sys.stdout.flush()
     chunk3()
+    sys.stdout.flush()
     chunk4()
+    sys.stdout.flush()
     chunk5()
+    sys.stdout.flush()
     chunk_error()
+    sys.stdout.flush()
     
     split1()
+    sys.stdout.flush()
     split2()
+    sys.stdout.flush()
     split3()
+    sys.stdout.flush()
     split4()
+    sys.stdout.flush()
     split5()
+    sys.stdout.flush()
     split6()
+    sys.stdout.flush()
     split7()
+    sys.stdout.flush()
     split8()
+    sys.stdout.flush()
     split9()
+    sys.stdout.flush()
     
     stack1()
+    sys.stdout.flush()
     cat1()
+    sys.stdout.flush()
     
     squeeze_unsqueeze_all_cases()
+    sys.stdout.flush()
     broadcast_to_all_cases()
+    sys.stdout.flush()
     
     broadcast_pair_case1()
+    sys.stdout.flush()
     broadcast_pair_case2()
+    sys.stdout.flush()
     broadcast_pair_case3()
+    sys.stdout.flush()
     broadcast_pair_case4()
+    sys.stdout.flush()
     broadcast_pair_case5()
+    sys.stdout.flush()
     broadcast_pair_case6()
+    sys.stdout.flush()
     
     
 if __name__ == "__main__":

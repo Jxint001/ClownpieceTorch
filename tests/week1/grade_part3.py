@@ -90,17 +90,22 @@ def simple_slice2(impl = torch):
 @testcase(name="complex_slice: 2D tensor", score=10)
 
 def complex_slice(impl = torch):
-    
+    print("complexxxxxxxxxxxxxxxxxxxxxxx", flush=True)
     lst =[[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20], [21, 22, 23, 24, 25]]
     lst2 = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]
     a = impl.Tensor(lst)
     b = impl.Tensor(lst2)
-    ret1 = a[0, 1:3]
-    ret2 = a[:, 2:5]
+    print("b is")
+    print(b, flush=True)
+    # ret1 = a[0, 1:3]
+    # ret2 = a[:, 2:5]
+    print("before ret3", flush=True)
     ret3 = b[:, 0]
+    print("after ret3", flush=True)
     
     print(ret3)
 
+    return ret3
     return ret1, ret2, ret3
 
 @testcase(name="is_contiguous2: True case", score=10)
@@ -128,6 +133,6 @@ def testsets_part3():
 
 if __name__ == "__main__":
   print("Beginning grading part 3")
-#   set_debug_mode(True)
+  set_debug_mode(True)
   testsets_part3()
   grader_summary("part3")

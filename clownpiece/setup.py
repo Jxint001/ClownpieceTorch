@@ -14,7 +14,7 @@ ext_modules = [
             "tensor/",
         ],
         language='c++',
-        extra_compile_args=['-std=c++17', '-O3', '-Wall'],
+        extra_compile_args=['-std=c++17', '-O3', '-Wall', '-g'],
     ),
 ]
 

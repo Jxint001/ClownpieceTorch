@@ -128,13 +128,13 @@ def testsets_part6():
     softmax1()
     softmax2()
     
-    # mean1()
-    # mean2()
-    # mean3()
-    # var1()
-    # var2()
-    # var3()
-    # var4()
+    mean1()
+    mean2()
+    mean3()
+    var1()
+    var2()
+    var3()
+    var4()
 
 if __name__ == "__main__":
     print("Beginning grading part6")

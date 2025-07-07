@@ -101,13 +101,21 @@ def matmul8(impl=torch):
 
 def testsets_part5():
     matmul1()
+    sys.stdout.flush()
     matmul2()
+    sys.stdout.flush()
     matmul3()
+    sys.stdout.flush()
     matmul4()
+    sys.stdout.flush()
     matmul5()
+    sys.stdout.flush()
     matmul6()
+    sys.stdout.flush()
     matmul7()
+    sys.stdout.flush()
     matmul8()
+    sys.stdout.flush()
 
 if __name__ == "__main__":
     print("Beginning grading part5")
