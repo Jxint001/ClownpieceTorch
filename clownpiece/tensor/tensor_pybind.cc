@@ -196,10 +196,9 @@ PYBIND11_MODULE(tensor_impl, m) {
                     else if (py::isinstance<py::slice>(item) || py::isinstance<py::tuple>(item)) has_slice = true;
                 }
                 
-                if (has_int && has_slice) {
-                    // Mixed indexing case: apply indices sequentially
+                if (has_int && has_slice){                                                                   
+                    // Mixed indexing case: convert to pure slicing
                     std::vector<slice_t> slices;
-                    at::Tensor result = self;
                     
                     for (size_t i = 0; i < t.size(); ++i) {
                         auto item = t[i];
