@@ -196,28 +196,44 @@ PYBIND11_MODULE(tensor_impl, m) {
                     else if (py::isinstance<py::slice>(item) || py::isinstance<py::tuple>(item)) has_slice = true;
                 }
                 
-                if (has_int && has_slice) {
-                    // Mixed indexing case: apply indices sequentially
-                    at::Tensor result = self;
+                if (has_int && has_slice){                                                                   
+                    // Mixed indexing case: convert to pure slicing
+                    std::vector<slice_t> slices;
                     
                     for (size_t i = 0; i < t.size(); ++i) {
                         auto item = t[i];
                         if (py::isinstance<py::int_>(item)) {
                             int index = item.cast<int>();
-                            result = result[index];  // This will reduce dimension
+                            slices.emplace_back(index, index + 1);
                         } else if (py::isinstance<py::slice>(item)) {
-                            slice_t slice = py_slice_to_slice_t(item.cast<py::slice>(), result.size(0));
-                            result = result[slice];  // This preserves dimension
+                            slice_t slice = py_slice_to_slice_t(item.cast<py::slice>(), self.size(i));
+                            slices.push_back(slice);
                         } else if (py::isinstance<py::tuple>(item)) {
                             auto subt = item.cast<py::tuple>();
                             if (subt.size() == 2) {
-                                slice_t slice(subt[0].cast<int>(), subt[1].cast<int>());
-                                result = result[slice];
+                                slices.emplace_back(subt[0].cast<int>(), subt[1].cast<int>());
                             } else {
                                 throw std::runtime_error("Invalid tuple size for slice");
                             }
                         } else {
                             throw std::runtime_error("Invalid index type in tuple");
+                        }
+                    }
+                    
+                    // Apply all slices together
+                    at::Tensor result = self[slices];
+                    
+                    // Now squeeze out the dimensions that were indexed with integers
+                    for (size_t i = 0; i < t.size(); ++i) {
+                        if (py::isinstance<py::int_>(t[i])) {
+                            // Need to squeeze dimension i, but account for already squeezed dimensions
+                            int dim_to_squeeze = i;
+                            for (size_t j = 0; j < i; ++j) {
+                                if (py::isinstance<py::int_>(t[j])) {
+                                    dim_to_squeeze--;
+                                }
+                            }
+                            result = result.squeeze(dim_to_squeeze);
                         }
                     }
                     return result;
@@ -226,6 +242,17 @@ PYBIND11_MODULE(tensor_impl, m) {
             
             // Normal case: use parse_index
             auto slices = parse_index(self, idx);
+            // std::cout<<"Parsed slices: ";
+            // for(auto & slice : slices) {
+            //     std::cout<<"slice="<<slice.first<<":"<<slice.second<<std::endl;
+            // }
+            
+            // Special case: if there's only one slice, use the single slice operator
+            if (slices.size() == 1) {
+                auto p = self[slices[0]];
+                return p;
+            }
+            
             auto p = self[slices];
             // std::cout<<"new_shape=";
             // for (const auto& dim : p.get_shape()) {
