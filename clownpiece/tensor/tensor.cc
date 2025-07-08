@@ -435,13 +435,6 @@ namespace at {
     subscriptor
   */
   Tensor Tensor::operator[](const vec<slice_t>& slices) const {
-    std::cout << "this is" << std::endl;
-    std::cout << *this << std::endl;
-    std::cout << "vec slice" << std::endl;
-    for (const auto& slice : slices) {
-       std::cout << "[vec]" << slice.first << " " << slice.second << '\n';
-    }
-    std::cout << std::endl;
     Tensor temp(*this);
     int n = slices.size();
     for (int d = 0; d < n; ++d) {
@@ -454,17 +447,11 @@ namespace at {
       temp.offset_ += nbegin * stride_[d];
       temp.shape_[d] = nbegin >= nend ? 0 : nend - nbegin;
     }
-    std::cout << "temp" << std::endl;
-    std::cout << temp << std::endl;
     return temp;
   }
 
   Tensor Tensor::operator[](slice_t slice) const {
-    std::cout << "single slice" << std::endl;
-    std::cout << "this is" << std::endl;
-    std::cout << *this << std::endl;
     Tensor temp(*this);
-    std::cout << slice.first << " " << slice.second << std::endl;
     int begin = slice.first, end = slice.second, siz = shape_[0];
     begin = begin < 0 ? begin + siz : begin;
     end = end < 0 ? end + siz : end;
@@ -472,7 +459,6 @@ namespace at {
     int nbegin = std::max(0, begin), nend = std::min(siz, end);
     temp.offset_ += nbegin * stride_[0];
     temp.shape_[0] = nbegin >= nend ? 0 : nend - nbegin;
-
     return temp;
   }
 
@@ -1226,7 +1212,7 @@ namespace at {
     dim = check_index_range(dim, ndim, "squeeze");
     
     if (shape_[dim] != 1) {
-      std::cout << "dim is " << shape_[dim] << std::endl;
+      //std::cout << "dim is " << shape_[dim] << std::endl;
       throw std::runtime_error("squeeze: dimension size must be 1");
     }
     

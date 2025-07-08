@@ -40,6 +40,10 @@ def simple_index2(impl = torch):
     a = impl.Tensor(lst)
     b = a.clone()
     b[0][0] = 100
+    # print("before c", flush=True)
+    # c = a[1][4]
+    # print("after c", flush=True)
+    # return (c)
     return (a[0][0], a[1][1], a[0][1], a[1][2], 
             a[0][3], a[1][3], a[0][4], a[1][4], b)
     
@@ -119,9 +123,12 @@ def is_contiguous2(impl = torch):
 
 def testsets_part3():
     is_contiguous1()
+    sys.stdout.flush()
     
     simple_index1()
+    sys.stdout.flush()
     simple_index2()
+    sys.stdout.flush()
     simple_index3()
     simple_index4()
     
