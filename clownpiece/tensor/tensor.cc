@@ -148,12 +148,12 @@ namespace at {
     return result;
   }
 
-  Tensor Tensor::apply_binary_op(std::function<dtype(dtype, dtype)> op, const Tensor& rhs) const {
+  Tensor Tensor::apply_binary_op(std::function<dtype(dtype, dtype)> op, const Tensor& rhs, const shape_t& sp) const {
     if (this->shape_ != rhs.shape_) {
         throw std::runtime_error("Tensors must have the same shape for binary operation");
     }
 
-    Tensor result = this->clone();
+    Tensor result(sp);
     int n = numel();
     for (int i = 0; i < n; ++i) {
         int idx = logidx_to_phyidx(*this, i);
@@ -496,131 +496,71 @@ namespace at {
 
   Tensor operator+(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a + b;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b + a;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a + b;
+    }, r, l.shape_);
   }
   
   Tensor operator-(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a - b;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b - a;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a - b;
+    }, r, l.shape_);
   }
 
   Tensor operator*(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a * b;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b * a;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a * b;
+    }, r, l.shape_);
   }
 
   Tensor operator/(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a / b;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b / a;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a / b;
+    }, r, l.shape_);
   }
   
   Tensor operator==(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a == b ? 1 : 0;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b == a ? 1 : 0;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a == b ? 1 : 0;
+    }, r, l.shape_);
   }
 
   Tensor operator!=(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a != b ? 1 : 0;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b != a ? 1 : 0;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a != b ? 1 : 0;
+    }, r, l.shape_);
   }
   Tensor operator<(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a < b ? 1 : 0;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b < a ? 1 : 0;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a < b ? 1 : 0;
+    }, r, l.shape_);
   }
 
   Tensor operator<=(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a <= b ? 1 : 0;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b <= a ? 1 : 0;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a <= b ? 1 : 0;
+    }, r, l.shape_);
   }
 
   Tensor operator>=(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a >= b ? 1 : 0;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b >= a ? 1 : 0;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a >= b ? 1 : 0;
+    }, r, l.shape_);
   }
 
   Tensor operator>(const Tensor& lhs, const Tensor& rhs) {
     auto [l, r] = lhs.broadcast(lhs, rhs);
-    if (rhs.dim() < lhs.dim()) {
-      return l.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return a > b ? 1 : 0;
-      }, r);
-    } else {
-      return r.apply_binary_op([](dtype a, dtype b) -> dtype {
-        return b > a ? 1 : 0;
-      }, l);
-    }
+    return l.apply_binary_op([](dtype a, dtype b) -> dtype {
+      return a > b ? 1 : 0;
+    }, r, l.shape_);
   }
 
   /*
@@ -823,7 +763,7 @@ namespace at {
         int result_index = 0;
         int stride = 1;
         for (int d = shape_.size() - 1; d >= 0; --d) {
-            if (d == dim) continue; // 跳过归约维度
+            if (d == dim) continue; // skip reduced dimension
             
             if (keepdims) {
                 int coord = (d < dim) ? indices[d] : indices[d+1];
@@ -1415,26 +1355,22 @@ namespace at {
   Tensor Tensor::mean(int dim, bool keepdims) const {
     Tensor s = sum(dim, keepdims);
     int size_along_dim = shape_[dim];
-    
-    // 将求和结果除以该维度的元素个数
+
     return s / static_cast<dtype>(size_along_dim);
   }
 
   Tensor Tensor::var(int dim, bool keepdims, bool unbiased) const {
-    // 计算均值
-    Tensor m = mean(dim, true); // 保持维度以便广播
+    /* mean */
+    Tensor m = mean(dim, true);
     
-    // 计算平方差
     Tensor diff = *this - m;
     diff = diff * diff;
     
-    // 沿dim维度求平均
     Tensor var_tensor = diff.mean(dim, keepdims);
     
     if (unbiased) {
         int n = size(dim);
         if (n <= 1) {
-            // 方差无定义，返回0
             return var_tensor * 0;
         }
         var_tensor = var_tensor * static_cast<dtype>(n) / static_cast<dtype>(n-1);

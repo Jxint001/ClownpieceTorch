@@ -73,7 +73,7 @@ class Tensor {
   friend inline void fill_in_stride(const shape_t& shape, stride_t& stride);
   friend inline int get_phyidx_in_scatter_(int dim /* 0 based */, const Tensor& index, const Tensor& self, int org_idx /* no need range check */);
   Tensor apply_unary_op(std::function<dtype(dtype)> op) const;
-  Tensor apply_binary_op(std::function<dtype(dtype, dtype)> op, const Tensor& rhs) const;
+  Tensor apply_binary_op(std::function<dtype(dtype, dtype)> op, const Tensor& rhs, const shape_t& sp) const;
   friend inline Tensor matrix_mult(const Tensor& a, const Tensor& b);
   friend inline Tensor strict_2d_matmul(const Tensor& l, const Tensor& r);
 
