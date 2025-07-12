@@ -877,6 +877,8 @@ namespace at {
 
   Tensor Tensor::transpose(int dim1, int dim2) const {
     int ndim = shape_.size();
+    dim1 = check_index_range(dim1, ndim, "Tensor::transpose");
+    dim2 = check_index_range(dim2, ndim, "Tensor::transpose");
     veci p;
     for (int i = 0; i < ndim; ++i) { p.push_back(i); }
     std::swap(p[dim1], p[dim2]);
