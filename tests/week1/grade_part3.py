@@ -101,15 +101,12 @@ def complex_slice(impl = torch):
     b = impl.Tensor(lst2)
     print("b is")
     print(b, flush=True)
-    # ret1 = a[0, 1:3]
-    # ret2 = a[:, 2:5]
+    ret1 = a[0, 1:3]
+    ret2 = a[:, 2:5]
     print("before ret3", flush=True)
     ret3 = b[:, 0]
     print("after ret3", flush=True)
-    
-    print(ret3)
 
-    return ret3
     return ret1, ret2, ret3
 
 @testcase(name="is_contiguous2: True case", score=10)
