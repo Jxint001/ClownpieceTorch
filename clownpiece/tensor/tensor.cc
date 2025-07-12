@@ -294,7 +294,7 @@ namespace at {
     Storage temp(data);
     storage_ = temp;
   }
-  Tensor::Tensor(const shape_t& shape, const stride_t& stride, int offset, Storage storage) :shape_(shape), stride_(stride), storage_(storage){
+  Tensor::Tensor(const shape_t& shape, const stride_t& stride, int offset, Storage storage) :shape_(shape), stride_(stride), storage_(storage), offset_(offset){
     calc_numel_(shape_, numel_);
   }
 
@@ -1158,15 +1158,11 @@ namespace at {
       throw std::runtime_error("squeeze: dimension size must be 1");
     }
     
-    shape_t new_shape;
-    stride_t new_stride;  
-    for (int d = 0; d < ndim; ++d) {
-        if (d != dim) {
-            new_shape.push_back(shape_[d]);
-            new_stride.push_back(stride_[d]);
-        }
-    }
-    
+    shape_t new_shape(shape_);
+    stride_t new_stride(stride_);
+    new_shape.erase(new_shape.begin() + dim);
+    new_stride.erase(new_stride.begin() + dim);
+
     return Tensor(new_shape, new_stride, offset_, storage_);
   }
 
