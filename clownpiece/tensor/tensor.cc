@@ -916,7 +916,7 @@ namespace at {
     }
 
     Tensor new_tensor(new_shape);
-    new_tensor.storage_ = storage_.clone();
+    new_tensor.storage_ = Storage(n);
     fill_in_stride(new_shape, new_tensor.stride_);
     for (int i = 0; i < n; ++i) {
       new_tensor.storage_[i] = data_at(i);
