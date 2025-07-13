@@ -1,3 +1,4 @@
+from sympy import FunctionClass
 from . import tensor_impl as cp
 # from cp import TensorBaseImpl
 
@@ -27,15 +28,15 @@ def is_grad_enabled_with_params(*args):
 
 
 def scalar_to_tensorbase(function):
-  def wrapped_function(*args, **kwargs):
-    new_args = []
-    for arg in args:
-      if isinstance(arg, (int, float)):
-        new_args.append(TensorBase(arg, requires_grad=False))
-      else:
-        new_args.append(arg)
-    return function(*new_args, **kwargs)
-  return wrapped_function
+    def wrapped_function(*args, **kwargs):
+        new_args = []
+        for arg in args:
+            if isinstance(arg, (int, float)):
+                new_args.append(TensorBase(arg, requires_grad=False))
+            else:
+                new_args.append(arg)
+        return function(*new_args, **kwargs)
+    return wrapped_function
 
 def tensor_base_op(impl_method_name):
   """
@@ -125,11 +126,14 @@ class TensorBase:
 
   @classmethod
   def ones(cls, shape, **kwargs):
+    print("[call] ones in TensorBase", flush=True)
     impl = cp.TensorBaseImpl.ones(shape)
+    print("impl in ones-TensorBase get", flush=True)
     return cls(impl, **kwargs)
   
   @classmethod
   def ones_like(cls, tensor, **kwargs):
+    print("[call] ones_like in TensorBase", flush=True)
     impl = cp.TensorBaseImpl.ones_like(tensor._impl)
     return cls(impl, **kwargs)
   
@@ -168,13 +172,18 @@ class TensorBase:
     if not isinstance(inputs, (list, tuple)):
       raise TypeError(f"Expected list or tuple, got {type(inputs).__name__}")
     if not all(isinstance(t, TensorBase) for t in inputs):
+      print(type(inputs[0]).__name__)
       raise TypeError("All inputs must be instances of TensorBase")
+    print("in TensorBase cat, dim is ", dim)
+    print(inputs[0].shape)
+    print(inputs[1].shape)
     impl = cp.TensorBaseImpl.cat([t._impl for t in inputs], dim)
     return cls(impl, **kwargs)
   
   @classmethod
   def broadcast(cls, *inputs: "TensorBase"):
     if not all(isinstance(t, TensorBase) for t in inputs):
+      print(type(inputs[0]).__name__)
       raise TypeError("All inputs must be instances of TensorBase")
     impls = cp.TensorBaseImpl.broadcast([t._impl for t in inputs])
     return [cls(impl) for impl in impls]
@@ -190,8 +199,13 @@ class TensorBase:
     return self.__class__(reshaped_impl)
 
   def __getitem__(self, idx):
+    print("in TensorBase getitem, idx is ", type(idx).__name__)
+    if isinstance(idx, (tuple, list)):
+      print(type(idx[0]).__name__)
     item = self._impl[idx]
+    # print("in TensorBase, item is a ", type(item).__name__)
     if isinstance(item, cp.TensorBaseImpl):
+      # print("self.__class__(item) is ", type(self.__class__(item)).__name__)
       return self.__class__(item)
     return item
 
@@ -344,8 +358,11 @@ class TensorBase:
   """
   def matmul(self, other):
     if not isinstance(other, TensorBase): raise TypeError(f"Expected TensorBase, got {type(other).__name__}")
+    print("in TensorBase, left is ", self, " right is ", other)
     matmul_impl = self._impl.matmul(other._impl)
-    return self.__class__(matmul_impl)
+    temp = self.__class__(matmul_impl)
+    print("result is ", temp)
+    return temp
   def dim(self): return len(self.shape)
   
   def squeeze(self, dim=0):
@@ -494,7 +511,7 @@ def tensor_op(op_name, Function_name):
       
       module = importlib.import_module("clownpiece.autograd.function")
       FunctionClass = getattr(module, Function_name)
-
+      # print("[in tensor_op decorator:] function is ", str(function))
       return function(*args, **kwargs, FunctionClass=FunctionClass)
     
     return wrapped_function
@@ -519,6 +536,9 @@ class Tensor(TensorBase):
   def __init__(self, data: TensorBase, requires_grad: bool = None) -> "Tensor":
     super().__init__(data)
     self.requires_grad_(requires_grad)
+    self.grad_fn = None
+    self.grad = None
+    self.output_nr = 0
 
   # set requires_grad based on is_grad_enabled.
   # ! you must implement this method: grader lib uses this function
@@ -530,9 +550,10 @@ class Tensor(TensorBase):
   # """
   #   Other
   # """
-  # def backward(self, grad: Optional["Tensor"]=None):
-  #   from clownpiece.autograd.autograd import backward
-  #   backward(self, grad)
+  def backward(self, grad: Optional["Tensor"]=None):
+    print("[call] backward in Tensor")
+    from clownpiece.autograd.autograd import backward
+    backward(self, grad)
       
   # def requires_grad_(self, requires_grad:bool=None):
   #   if requires_grad is None:
@@ -550,215 +571,214 @@ class Tensor(TensorBase):
   # """
   #   Part 1
   # """
-  # @tensor_op('clone', 'Clone')
-  # def clone(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('clone', 'Clone')
+  def clone(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
 
   
-  # @tensor_op('contiguous', 'Contiguous')
-  # def contiguous(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('contiguous', 'Contiguous')
+  def contiguous(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('__getitem__', 'Subscriptor')
-  # def __getitem__(self, index, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, index)
+  @tensor_op('__getitem__', 'Subscriptor')
+  def __getitem__(self, index, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, index)
     
-  # """
-  #   Part 2
-  # """
-  # @tensor_op('__neg__', 'Neg')
-  # def __neg__(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  """
+    Part 2
+  """
+  @tensor_op('__neg__', 'Neg')
+  def __neg__(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('sign', 'Sign')
-  # def sign(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('sign', 'Sign')
+  def sign(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('abs', 'Abs')
-  # def abs(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self) 
+  @tensor_op('abs', 'Abs')
+  def abs(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self) 
   
-  # @tensor_op('sin', 'Sin')
-  # def sin(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('sin', 'Sin')
+  def sin(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('cos', 'Cos')
-  # def cos(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('cos', 'Cos')
+  def cos(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('tanh', 'Tanh')
-  # def tanh(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('tanh', 'Tanh')
+  def tanh(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('clamp', 'Clamp')
-  # def clamp(self, min_val, max_val, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, min_val, max_val)
+  @tensor_op('clamp', 'Clamp')
+  def clamp(self, min_val, max_val, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, min_val, max_val)
 
 
-  # @tensor_op('log', 'Log')
-  # def log(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('log', 'Log')
+  def log(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('exp', 'Exp')
-  # def exp(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('exp', 'Exp')
+  def exp(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
-  # @tensor_op('pow', 'Pow')
-  # def pow(self, exponent, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, exponent)
+  @tensor_op('pow', 'Pow')
+  def pow(self, exponent, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, exponent)
 
-  # @tensor_op('sqrt', 'Sqrt')
-  # def sqrt(self, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self)
+  @tensor_op('sqrt', 'Sqrt')
+  def sqrt(self, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self)
   
   # """
   #   Part 3
   # """
   
-  # @tensor_op('__add__', 'Add')
-  # @scalar_to_tensor
-  # def __add__(self, other, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, other)
+  @tensor_op('__add__', 'Add')
+  @scalar_to_tensor
+  def __add__(self, other, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, other)
   
-  # @tensor_op('__radd__', 'Add')
-  # @scalar_to_tensor
-  # def __radd__(self, other, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(other, self)
+  @tensor_op('__radd__', 'Add')
+  @scalar_to_tensor
+  def __radd__(self, other, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(other, self)
 
-  # @tensor_op('__sub__', 'Sub')
-  # @scalar_to_tensor
-  # def __sub__(self, other, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, other)
+  @tensor_op('__sub__', 'Sub')
+  @scalar_to_tensor
+  def __sub__(self, other, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, other)
   
-  # @tensor_op('__rsub__', 'Sub')
-  # @scalar_to_tensor
-  # def __rsub__(self, other, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(other, self)
+  @tensor_op('__rsub__', 'Sub')
+  @scalar_to_tensor
+  def __rsub__(self, other, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(other, self)
   
-  # @tensor_op('__mul__', 'Mul')
-  # @scalar_to_tensor
-  # def __mul__(self, other, FunctionClass=None)->"Tensor":
-  #   print("Tensor __mul__ called with other:", other)
-  #   return FunctionClass().apply(self, other)
+  @tensor_op('__mul__', 'Mul')
+  @scalar_to_tensor
+  def __mul__(self, other, FunctionClass=None)->"Tensor":
+    print("Tensor __mul__ called with other:", other)
+    return FunctionClass().apply(self, other)
     
-  # @tensor_op('__rmul__', 'Mul')
-  # @scalar_to_tensor
-  # def __rmul__(self, other, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(other, self)
+  @tensor_op('__rmul__', 'Mul')
+  @scalar_to_tensor
+  def __rmul__(self, other, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(other, self)
 
-  # @tensor_op('__truediv__', 'Div')
-  # @scalar_to_tensor
-  # def __truediv__(self, other, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, other)
+  @tensor_op('__truediv__', 'Div')
+  @scalar_to_tensor
+  def __truediv__(self, other, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, other)
   
-  # @tensor_op('__rtruediv__', 'Div')
-  # @scalar_to_tensor
-  # def __rtruediv__(self, other, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(other, self)
+  @tensor_op('__rtruediv__', 'Div')
+  @scalar_to_tensor
+  def __rtruediv__(self, other, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(other, self)
   
   # """
   # Part 4
   # """
-  # @tensor_op('matmul', 'MatMul')
-  # def matmul(self, other, FunctionClass=None)->"Tensor":
-  #   if not isinstance(other, Tensor):
-  #     raise TypeError(f"Expected Tensor, got {type(other).__name__}")
-    
-  #   return FunctionClass().apply(self, other)
+  @tensor_op('matmul', 'MatMul')
+  def matmul(self, other, FunctionClass=None)->"Tensor":
+    print("[call] matmul Tensor")
+    if not isinstance(other, Tensor):
+      raise TypeError(f"Expected Tensor, got {type(other).__name__}")
+    print(type(FunctionClass).__name__)
+    return FunctionClass().apply(self, other)
   
-  # def __matmul__(self, other)->"Tensor":    
-  #   return self.matmul(other)
+  def __matmul__(self, other)->"Tensor":    
+    return self.matmul(other)
   
-  # def __rmatmul__(self, other)->"Tensor":
-  #   if not isinstance(other, Tensor):
-  #     raise TypeError(f"Expected Tensor, got {type(other).__name__}")
-  #   return other.matmul(self)
+  def __rmatmul__(self, other)->"Tensor":
+    if not isinstance(other, Tensor):
+      raise TypeError(f"Expected Tensor, got {type(other).__name__}")
+    return other.matmul(self)
   
   # """
   # Part 5
   # """
-  # @tensor_op('sum', 'Sum')
-  # def sum(self, dim=None, keepdims=False, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, dim, keepdims)
+  @tensor_op('sum', 'Sum')
+  def sum(self, dim=None, keepdims=False, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, dim, keepdims)
   
-  # @tensor_op('max', 'Max')
-  # def max(self, dim=-1, keepdims=False, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, dim, keepdims)
+  @tensor_op('max', 'Max')
+  def max(self, dim=-1, keepdims=False, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, dim, keepdims)
   
-  # @tensor_op('softmax', 'Softmax')
-  # def softmax(self, dim=-1, FunctionClass=None)->"Tensor":
-  #   return FunctionClass().apply(self, dim)
+  @tensor_op('softmax', 'Softmax')
+  def softmax(self, dim=-1, FunctionClass=None)->"Tensor":
+    return FunctionClass().apply(self, dim)
   
   # """
   # Part 6
   # """
+
+  @tensor_op('permute', 'Permute')
+  def permute(self, perm: List[int], FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, perm)
   
-  # @tensor_op('permute', 'Permute')
-  # def permute(self, perm: List[int], FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, perm)
-
-  # @tensor_op('transpose', 'Transpose')
-  # def transpose(self, dim0: int, dim1: int, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, dim0, dim1)
-
-  # @tensor_op('reshape', 'Reshape')
-  # def reshape(self, shape: List[int], FunctionClass=None) -> "Tensor":
-  #     if not isinstance(shape, list):
-  #       if isinstance(shape, int):
-  #         shape = [shape]
-  #       else:
-  #         raise TypeError(f"Expected list or int for shape, got {type(shape).__name__}")
-  #     return FunctionClass().apply(self, shape)
-
-  # @tensor_op('view', 'View')
-  # def view(self, shape: List[int], FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, shape)
-
-  # @tensor_op('narrow', 'Narrow')
-  # def narrow(self, dim: int, start: int, length: int, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, dim, start, length)
-
-  # @tensor_op('chunk', 'Chunk')
-  # def chunk(self, chunks: int, dim: int = 0, FunctionClass=None) -> List["Tensor"]:
-  #     return FunctionClass().apply(self, chunks, dim)
-
-  # @tensor_op('split', 'Split')
-  # def split(self, split: Union[int, List[int]], dim: int = 0, FunctionClass=None) -> List["Tensor"]:
-  #     return FunctionClass().apply(self, split, dim)
-
-  # @tensor_op('stack', 'Stack')
-  # def stack(inputs: List["Tensor"], dim: int = 0, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(*inputs, dim=dim)
-
-  # @tensor_op('cat', 'Cat')
-  # def cat(inputs: List["Tensor"], dim: int = 0, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(*inputs, dim=dim)
-
-  # @tensor_op('squeeze', 'Squeeze')
-  # def squeeze(self, dim: int = 0, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, dim)
-
-  # @tensor_op('unsqueeze', 'Unsqueeze')
-  # def unsqueeze(self, dim: int = 0, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, dim)
-
-  # @tensor_op('broadcast_to', 'BroadcastTo')
-  # def broadcast_to(self, shape: List[int], FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, shape)
-
-  # @tensor_op('broadcast', 'Broadcast')
-  # def broadcast(inputs: List["Tensor"], FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(*inputs)
+  @tensor_op('transpose', 'Transpose')
+  def transpose(self, dim0: int, dim1: int, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, dim0, dim1)
   
+  @tensor_op('reshape', 'Reshape')
+  def reshape(self, shape: List[int], FunctionClass=None) -> "Tensor":
+    if not isinstance(shape, list):
+      if isinstance(shape, int):
+        shape = [shape]
+      else:
+        raise TypeError(f"Expected list or int for shape, got {type(shape).__name__}")
+    return FunctionClass().apply(self, shape)
   
-    
-  # @tensor_op('mean', 'Mean')
-  # def mean(self, dim: int, keepdims: bool = False, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, dim, keepdims)
-    
-  # @tensor_op('var', 'Var')
-  # def var(self, dim: int, keepdims: bool = False, unbiased: bool = True, FunctionClass=None) -> "Tensor":
-  #     return FunctionClass().apply(self, dim, keepdims, unbiased)
+  @tensor_op('view', 'View')
+  def view(self, shape: List[int], FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, shape)
+  
+  @tensor_op('narrow', 'Narrow')
+  def narrow(self, dim: int, start: int, length: int, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, dim, start, length)
+  
+  @tensor_op('chunk', 'Chunk')
+  def chunk(self, chunks: int, dim: int = 0, FunctionClass=None) -> List["Tensor"]:
+    return FunctionClass().apply(self, chunks, dim)
+  
+  @tensor_op('split', 'Split')
+  def split(self, split: Union[int, List[int]], dim: int = 0, FunctionClass=None) -> List["Tensor"]:
+    return FunctionClass().apply(self, split, dim)
+  
+  @tensor_op('stack', 'Stack')
+  def stack(inputs: List["Tensor"], dim: int = 0, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(*inputs, dim=dim)
+  
+  @tensor_op('cat', 'Cat')
+  def cat(inputs: List["Tensor"], dim: int = 0, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(*inputs, dim=dim)
+  
+  @tensor_op('squeeze', 'Squeeze')
+  def squeeze(self, dim: int = 0, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, dim)
+  
+  @tensor_op('unsqueeze', 'Unsqueeze')
+  def unsqueeze(self, dim: int = 0, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, dim)
+  
+  @tensor_op('broadcast_to', 'BroadcastTo')
+  def broadcast_to(self, shape: List[int], FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, shape)
+  
+  @tensor_op('broadcast', 'Broadcast')
+  def broadcast(inputs: List["Tensor"], FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(*inputs)
+
+  @tensor_op('mean', 'Mean')
+  def mean(self, dim: int, keepdims: bool = False, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, dim, keepdims)
+  
+  @tensor_op('var', 'Var')
+  def var(self, dim: int, keepdims: bool = False, unbiased: bool = True, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, dim, keepdims, unbiased)
       
   """
   STR
@@ -769,13 +789,13 @@ class Tensor(TensorBase):
     return f"({super().__repr__()}, requires_grad={self.requires_grad}, grad_fn={grad_fn_name})"
   
 def stack(inputs: List[Tensor], dim: int = 0) -> Tensor:
-  return Tensor.stack(inputs, dim)
+    return Tensor.stack(inputs, dim)
 
 def cat(inputs: List[Tensor], dim: int = 0) -> Tensor:
-  return Tensor.cat(inputs, dim)
+    return Tensor.cat(inputs, dim)
 
 def broadcast(inputs: List[Tensor]) -> Tensor:
-  return Tensor.broadcast(inputs)
+    return Tensor.broadcast(inputs)
 
 # """
 #   Constructors
@@ -794,6 +814,7 @@ def zeros_like(tensor: Tensor, requires_grad=False) -> Tensor:
   return Tensor.zeros(tensor.shape, requires_grad=requires_grad)
 
 def ones(shape, requires_grad=False):
+  # print("[call] ones that create a Tensor", flush=True)
   return Tensor.ones(shape, requires_grad=requires_grad)
 
 def ones_like(tensor: Tensor, requires_grad=False) -> Tensor:
