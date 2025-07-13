@@ -788,6 +788,10 @@ Subscriptor returns a view of the tensor (or sub-tensor). The backward need to:
 - 2. subscript `sub_grad_input = grad_input[index_or_slice]`
 - 3. copy `grad_output` into `sub_grad_input` using `copy_`.
 
+>> Remark: inplace modifications on a subsscriptor-returned tensor are prohibited when grad tracing is enabled. You need not support them.
+
+>> One may only use subscriptor to create a new tensor when grad tracing is enabled.
+
 ---
 
 ## Part 2. Unary Operations
