@@ -170,7 +170,13 @@ namespace at {
 
     /* Broadcast leading dimensions */
     shape_t na_shape = a.shape_, nb_shape = b.shape_;
-    for (int i = dima - 3, j = dimb - 3; i >= 0 && j >= 0; --i, --j) {
+    while (na_shape.size() < nb_shape.size()) {
+      na_shape.insert(na_shape.begin(), 1);
+    }
+    while (nb_shape.size() < na_shape.size()) {
+      nb_shape.insert(nb_shape.begin(), 1);
+    }
+    for (int i = na_shape.size() - 3, j = nb_shape.size() - 3; i >= 0 && j >= 0; --i, --j) {
       if (nb_shape.size() < dima - 2 - i) {
         nb_shape.insert(nb_shape.begin(), na_shape[i]);
         ++j;
@@ -408,12 +414,12 @@ namespace at {
     }
 
     Tensor transposed = transpose(dim, -1);
-    int dim_size = transposed.size(-1);
+    int size_along_dim = transposed.size(-1);
     int n = index.numel();
     for (int i = 0; i < n; ++i) {
       int pos = index.data_at(i);
       dtype src_val = src.data_at(i);
-      transposed.data_at(i * dim_size + pos) = src_val;
+      transposed.data_at(i * size_along_dim + pos) = src_val;
     }
 
     return *this;
