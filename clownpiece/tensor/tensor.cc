@@ -235,15 +235,11 @@ namespace at {
       int offset_res = result.offset_;
       for (int d = 0; d < lead_dims; ++d) {
         offset_res += coords[d] * result.stride_[d];
-      }
-
-      Tensor result_block({m, k}, 
-                          {result.stride_[dimn - 2], result.stride_[dimn - 1]},
-                          offset_res, result.storage_);
+      }      
 
       for (int i = 0; i < m; ++i) {
         for (int j = 0; j < k; ++j) {
-          result.data_at(i * k + j) = res_block.data_at(i * k + j);
+          result.data_at((idx * m * k) + i * k + j) = res_block.data_at(i * k + j);
         }
       }
     }
