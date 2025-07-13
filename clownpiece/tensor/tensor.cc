@@ -108,22 +108,6 @@ namespace at {
     }
   }
 
-  inline int get_phyidx_in_scatter_(int dim /* 0 based */, const Tensor& index, const Tensor& self, int org_idx /* no need range check */) {
-    int phyidx = self.offset_;
-    for (int d = self.shape_.size() - 1; d >= 0; --d) {
-      int coord, len = self.shape_[d];
-      /* Calc coordinate */
-      if (d != dim) {
-        coord = org_idx % len;
-      } else {
-        coord = index.data_at(org_idx);
-      }
-      phyidx += coord * self.stride_[d];
-      org_idx /= len;
-    }
-    return phyidx;
-  }
-
   dtype& Tensor::data_at(int index) const {
     int phyidx = logidx_to_phyidx(*this, index);
    return storage_[phyidx];
@@ -410,21 +394,26 @@ namespace at {
 
   /* 正确性需要检查，先往下写 */
   Tensor Tensor::scatter_(int dim, const Tensor& index, const Tensor& src) const {
-    assert(this->dim() == index.dim() && index.dim() == src.dim());
-    int index_n = index.dim();
-    for (int i = 0; i < index_n; ++i) {
-      int index_size = index.size(i);
-      assert(i != dim || index_size <= size(i));
-      assert(index_size <= src.size(i));
+    dim = check_index_range(dim, shape_.size(), "Tensor::scatter_");
+    
+    int ndim = shape_.size();
+    shape_t shape = shape_;
+    shape.erase(shape.begin() + dim);
+    
+    for (int i = 0; i < ndim; i++) {
+      if (i == dim) continue;
+      if (shape_[i] != index.shape_[i] || shape_[i] != src.shape_[i]) {
+        throw std::runtime_error("shape mismatch in Tensor::scatter_");
+      }
     }
-    /* 
-    其实也可以先假设条件都满足
-    毕竟我现在也没有检查 index tensor 是否满足值在 [0, size(dim) - 1] 之间的要求，
-    也没检查 dim 维度上 src 和 index 是否满足关系 
-    */
-    int n = src.numel();
+
+    Tensor transposed = transpose(dim, -1);
+    int dim_size = transposed.size(-1);
+    int n = index.numel();
     for (int i = 0; i < n; ++i) {
-      storage_[get_phyidx_in_scatter_(dim, index, *this, i)] = src.data_at(i);
+      int pos = index.data_at(i);
+      dtype src_val = src.data_at(i);
+      transposed.data_at(i * dim_size + pos) = src_val;
     }
 
     return *this;
