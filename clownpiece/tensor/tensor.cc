@@ -566,12 +566,12 @@ namespace at {
     else if (dl == 1 && dr >= 2) {
       Tensor lhs_2d = lhs.unsqueeze(0);  // Change shape from (n,) to (1, n)
       Tensor temp = matrix_mult(lhs_2d, rhs);
-      return temp.squeeze(0);
+      return temp.squeeze(-2);
     }
     else if (dr == 1 && dl >= 2) {
       Tensor rhs_2d = (rhs.unsqueeze(0)).transpose(1, 0);
       Tensor temp = matrix_mult(lhs, rhs_2d);
-      return temp.squeeze(1);
+      return temp.squeeze(-1);
     } 
     else { /* dl >= 2 && dr >= 2*/
       return matrix_mult(lhs, rhs);
