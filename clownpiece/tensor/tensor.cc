@@ -170,26 +170,34 @@ namespace at {
 
     /* Broadcast leading dimensions */
     shape_t na_shape = a.shape_, nb_shape = b.shape_;
+    stride_t na_stride = a.stride_, nb_stride = b.stride_;
     while (na_shape.size() < nb_shape.size()) {
       na_shape.insert(na_shape.begin(), 1);
+      na_stride.insert(na_stride.begin(), 0);
     }
     while (nb_shape.size() < na_shape.size()) {
       nb_shape.insert(nb_shape.begin(), 1);
+      nb_stride.insert(nb_stride.begin(), 0);
     }
     for (int i = na_shape.size() - 3, j = nb_shape.size() - 3; i >= 0 && j >= 0; --i, --j) {
-      if (nb_shape.size() < dima - 2 - i) {
-        nb_shape.insert(nb_shape.begin(), na_shape[i]);
-        ++j;
-      } else {
-        int ms = nb_shape[j], ts = na_shape[i];
-        if (ms > ts && ts > 1) {
-          throw std::runtime_error("Invalid broadcast in matrix_mult");
-        }
-        nb_shape[j] = std::max(ms, ts);
+      int ca = na_shape[i], cb = nb_shape[j];
+      int ms = std::max(ca, cb);
+      if (ms > ca && ca > 1 || ms > cb && cb > 1) {
+        throw std::runtime_error("Invalid broadcast in matrix_mult");
+      }
+      if (ca < ms) {
+        na_shape[i] = ms;
+        na_stride[i] = 0;
+      }
+      if (cb < ms) {
+        nb_shape[j] = ms;
+        nb_stride[j] = 0;
       }
     }
 
-    na_shape = nb_shape;  na_shape[dimn - 1] = n, na_shape[dimn - 2] = m;
+    Tensor na(na_shape, na_stride, a.offset_, a.storage_);
+    Tensor nb(nb_shape, nb_stride, b.offset_, b.storage_);
+    dima = na.dim(), dimb = nb.dim();
     shape_t res_shape = na_shape;  res_shape[dimn - 1] = k;
     Tensor result(res_shape, 0);
 
@@ -208,27 +216,28 @@ namespace at {
         temp /= res_shape[d];
       }
 
-      int offset_a = a.offset_;
+
+      int offset_a = na.offset_;
       for (int d = 0; d < lead_dims; ++d) {
         int coord = (d < dima - 2) ? 
-                  (coords[d] < a.shape_[d] ? coords[d] : 0) : 0;
-        offset_a += coord * a.stride_[d];
+                  (coords[d] < na.shape_[d] ? coords[d] : 0) : 0;
+        offset_a += coord * na.stride_[d];
       }
 
       Tensor a_2d({m, n}, 
-                  {a.stride_[dima - 2], a.stride_[dima - 1]},
-                  offset_a, a.storage_);
+                  {na.stride_[dima - 2], na.stride_[dima - 1]},
+                  offset_a, na.storage_);
 
-      int offset_b = b.offset_;
+      int offset_b = nb.offset_;
       for (int d = 0; d < lead_dims; ++d) {
         int coord = (d < dimb - 2) ? 
-                  (coords[d] < b.shape_[d] ? coords[d] : 0) : 0;
-        offset_b += coord * b.stride_[d];
+                  (coords[d] < nb.shape_[d] ? coords[d] : 0) : 0;
+        offset_b += coord * nb.stride_[d];
       }
 
       Tensor b_2d({n, k}, 
-                  {b.stride_[dimb - 2], b.stride_[dimb - 1]},
-                  offset_b, b.storage_);
+                  {nb.stride_[dimb - 2], nb.stride_[dimb - 1]},
+                  offset_b, nb.storage_);
 
       Tensor res_block = strict_2d_matmul(a_2d, b_2d);
 
@@ -239,7 +248,7 @@ namespace at {
 
       for (int i = 0; i < m; ++i) {
         for (int j = 0; j < k; ++j) {
-          result.data_at((idx * m * k) + i * k + j) = res_block.data_at(i * k + j);
+          result.data_at(offset_res + i * k + j) = res_block.data_at(i * k + j);
         }
       }
     }
@@ -695,6 +704,8 @@ namespace at {
     for (int i = 0; i < n; ++i) {
       int result_index = 0;
       int stride = 1;
+
+      // std::cerr << "indices are " << indices << std::endl;
       for (int d = ndim - 1; d >= 0; --d) {
           if (d == dim) {
             continue;
@@ -710,7 +721,7 @@ namespace at {
       }
       
       result.storage_[result_index] += data_at(i);
-      
+      // std::cerr << result_index << " is filled with " << data_at(i) << std::endl;
       /* Update indices */
       for (int d = shape_.size() - 1; d >= 0; --d) {
           if (++indices[d] < shape_[d]) {
