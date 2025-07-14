@@ -99,8 +99,8 @@ def testsets_part5():
     sum_op()
     sum_op_hard()
     softmax_op()
-    # mean_op()
-    # var_op()
+    mean_op()
+    var_op()
 
 if __name__ == "__main__":
     testsets_part5()
