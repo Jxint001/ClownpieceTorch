@@ -44,7 +44,6 @@ class Edge():
     
     @staticmethod
     def gradient_edge(tensor: Tensor) -> "Edge":
-        print("[call] gradient_edge", flush=True)
         if not isinstance(tensor, Tensor):
             return Edge(-1, None)
         
@@ -66,21 +65,15 @@ class GraphRoot(Node):
     """
 
     def __init__(self, tensor: Tensor, grad: Tensor):
-        print("[call] __init__ GraphRoot")
         super().__init__()
         self.output_nr = 0
         # step1. store the grad
-        # print("grad initially is ",grad)
         self.root_grad = grad
         # step2. create a single edge points to tensor.grad_fn
         self.next_edges.append(Edge(0, tensor.grad_fn))
-
-        print("len of next_edges is ", self.next_edges.__len__())
     
     def run(self, *args, **kargs):
         # step1. return the stored grad
-        print("[call] run in GraphRoot")
-        print("current grad is ", self.root_grad)
         return self.root_grad
 
 class NodeTask():
@@ -99,22 +92,13 @@ class NodeTask():
         self.inputs = inputs
         
     def run(self):
-        print("[call] run in NodeTask")
         # step1. run the node with inputs
         outputs = self.node.run(*self.inputs)
-        # 这里得到的就已经是 tuple(list) 了
-        print(type(outputs).__name__)
-        if isinstance(outputs, (list, tuple)):
-            print(type(outputs[0]).__name__)
         if not isinstance(outputs, (tuple, list)):
             outputs = wrap_tuple(outputs)
-        # print("in NodeTask run, outputs are ", outputs)
-        # print("outputs is ", type(outputs).__name__)
+
         # step2. fill the input buffer in GraphTask
-        print(self.node.next_edges.__len__(), outputs.__len__())
-        print("outputs are ", type(outputs).__name__,outputs, flush=True)
         for e, grad in zip(self.node.next_edges, outputs):
-            print("grad is ", type(grad).__name__, grad)
             if e.node is not None and grad is not None:
                 self.base.fill_input(e.node, grad, e.input_nr)
 
@@ -152,8 +136,6 @@ class GraphTask():
         print("##########################\n")
 
     def __init__(self, roots: List[Node]):
-        print("[call] __init__ in GraphTask")
-        # print(roots.__len__())
         roots = wrap_tuple(roots)
         roots = [root for root in roots if root is not None]
         
@@ -165,16 +147,14 @@ class GraphTask():
         self.dependencies = {}
         self.inputs_buffer = {}
         self._construct_graph()
-        self.print_graph()
+        # self.print_graph()  # for debug
         
     # helper function to assign node_id and initialize self.nodes, dependencies and inputs_buffer
     def _construct_graph(self):
-        print("[call] _construct_graph in GraphTask")
         que = Queue()
         for rt in self.roots:
             que.put(rt)
 
-        # print("self.roots has len of ", self.roots.__len__())
         id = 0
         for ns in self.roots:
             ns.node_id = id
@@ -183,33 +163,30 @@ class GraphTask():
         self.dependencies = {key : 0 for key in self.roots}  # roots have no dependency
         self.inputs_buffer = {key : [] for key in self.roots}  # roots have nothing to accumulate
 
-        # print("queue has len of ", que.qsize())
+
         while not que.empty():
-            # print("in while loop")
             node = que.get()
             if node not in self.inputs_buffer:
                 self.inputs_buffer[node] = []
 
             for e in node.next_edges:
-                print("node %d has %d next edges" % (node.node_id, node.next_edges.__len__()))
-                # print("e has type ", type(e).__name__)
                 nxt = e.node
                 if nxt is None:
                     continue
-                # print("nxt is not None in contruction", flush=True)
+
                 if nxt not in self.dependencies:  # new node in graph
-                    # print("new node!")
+
                     que.put(nxt)
                     nxt.node_id = id
                     id += 1
                     self.nodes.append(nxt)
                     self.dependencies[nxt] = 0
                 self.dependencies[nxt] += 1
-                # print("type of nxt is ", type(nxt).__name__)
+
 
         for nd in self.nodes:
             self.inputs_buffer[nd] = [None] * self.dependencies[nd]
-        # print("constructed")
+
         
     # execute
     def run(self):
@@ -220,25 +197,16 @@ class GraphTask():
         # perform topological sort to execute the graph
         dq = deque([NodeTask(node, self.inputs_buffer[node], self) for node in self.roots])
         while dq:
-            print("loop", flush=True)
             node_task = dq.popleft()
             node_task.run()
-            
-            print("runned ", node_task.node.node_id, node_task.node)
+
             for e in node_task.node.next_edges:
                 nxt = e.node
                 if nxt is not None:
-                    # print("nxt is ", nxt.node_id)
                     self.dependencies[nxt] -= 1
                     if self.dependencies[nxt] == 0:
                         dq.append(NodeTask(nxt, self.inputs_buffer[nxt], self))
                         self.inputs_buffer.pop(nxt)
-        print("###runned###", flush=True)
-        # while queue is not empty:
-        # 1. node_task = queue.pop()
-        # 2. node_task.run()
-        # 3. decrement dependencies count for target nodes of outbound edges
-        # 4. enqueue a new NodeTask if dependencies drops to zero. (remember to delete the node in inputs_buffer to release memory.)
 
     # for production
     def _run_multi_thread(self):
@@ -260,22 +228,16 @@ class GraphTask():
                     
     # accumulate input_grad to self.inputs_buffer[node][input_nr]
     def fill_input(self, node: Node, input_grad: Tensor, input_nr: int):
-        print("[call] fill_input in GraphTask")
-        # print("input_grad is ", input_grad)
-        # print(type(node).__name__)
-        print("node ", node.node_id)
         if self.inputs_buffer[node][input_nr] is None:
             self.inputs_buffer[node][input_nr] = input_grad
         else:
             self.inputs_buffer[node][input_nr] += input_grad
-        print("the %d th input_buffer of node %d is now %s" % (input_nr, node.node_id, type(self.inputs_buffer[node][input_nr]).__name__), self.inputs_buffer[node][input_nr])
 
 
 """
     Execute backward pass.    
 """
 def backward(tensors: Union[Tensor, List[Tensor]], grads: Optional[Union[Tensor, List[Tensor]]] = None):
-    print("[call] backward in GraphTask")
     tensors = wrap_tuple(tensors)
 
     if grads is None:
@@ -286,7 +248,6 @@ def backward(tensors: Union[Tensor, List[Tensor]], grads: Optional[Union[Tensor,
     graph_roots = [
         GraphRoot(tensor, grad) for tensor, grad in zip(tensors, grads) if tensor.requires_grad
     ]
-    print("We have %d graph roots" % graph_roots.__len__())
 
     # execute with GraphTask
     gt = GraphTask(graph_roots)

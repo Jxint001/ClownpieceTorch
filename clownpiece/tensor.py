@@ -126,14 +126,11 @@ class TensorBase:
 
   @classmethod
   def ones(cls, shape, **kwargs):
-    print("[call] ones in TensorBase", flush=True)
     impl = cp.TensorBaseImpl.ones(shape)
-    print("impl in ones-TensorBase get", flush=True)
     return cls(impl, **kwargs)
   
   @classmethod
   def ones_like(cls, tensor, **kwargs):
-    print("[call] ones_like in TensorBase", flush=True)
     impl = cp.TensorBaseImpl.ones_like(tensor._impl)
     return cls(impl, **kwargs)
   
@@ -159,7 +156,6 @@ class TensorBase:
   
   @classmethod
   def stack(cls, inputs: List["TensorBase"], dim=0, **kwargs):
-    print("Base Stack called with inputs:", inputs, "dim:", dim)
     if not isinstance(inputs, (list, tuple)):
       raise TypeError(f"Expected list or tuple, got {type(inputs).__name__}")
     if not all(isinstance(t, TensorBase) for t in inputs):
@@ -172,18 +168,13 @@ class TensorBase:
     if not isinstance(inputs, (list, tuple)):
       raise TypeError(f"Expected list or tuple, got {type(inputs).__name__}")
     if not all(isinstance(t, TensorBase) for t in inputs):
-      print(type(inputs[0]).__name__)
       raise TypeError("All inputs must be instances of TensorBase")
-    print("in TensorBase cat, dim is ", dim)
-    print(inputs[0].shape)
-    print(inputs[1].shape)
     impl = cp.TensorBaseImpl.cat([t._impl for t in inputs], dim)
     return cls(impl, **kwargs)
   
   @classmethod
   def broadcast(cls, *inputs: "TensorBase"):
     if not all(isinstance(t, TensorBase) for t in inputs):
-      print(type(inputs[0]).__name__)
       raise TypeError("All inputs must be instances of TensorBase")
     impls = cp.TensorBaseImpl.broadcast([t._impl for t in inputs])
     return [cls(impl) for impl in impls]
@@ -194,18 +185,12 @@ class TensorBase:
     return self._impl.shape
       
   def reshape(self, new_shape):
-    print("Base Reshape called with new shape:", new_shape)
     reshaped_impl = self._impl.reshape(new_shape)
     return self.__class__(reshaped_impl)
 
   def __getitem__(self, idx):
-    print("in TensorBase getitem, idx is ", type(idx).__name__)
-    if isinstance(idx, (tuple, list)):
-      print(type(idx[0]).__name__)
     item = self._impl[idx]
-    # print("in TensorBase, item is a ", type(item).__name__)
     if isinstance(item, cp.TensorBaseImpl):
-      # print("self.__class__(item) is ", type(self.__class__(item)).__name__)
       return self.__class__(item)
     return item
 
@@ -358,10 +343,8 @@ class TensorBase:
   """
   def matmul(self, other):
     if not isinstance(other, TensorBase): raise TypeError(f"Expected TensorBase, got {type(other).__name__}")
-    print("in TensorBase, left is ", self, " right is ", other)
     matmul_impl = self._impl.matmul(other._impl)
     temp = self.__class__(matmul_impl)
-    print("result is ", temp)
     return temp
   def dim(self): return len(self.shape)
   
@@ -376,7 +359,6 @@ class TensorBase:
     Part5
   """
   def max(self, dim=None, keepdims=False):
-    print("max called with dim=", dim, "keepdims=", keepdims)
     if isinstance(dim, int):
       pass
     elif isinstance(dim, (list, tuple)):
@@ -452,7 +434,6 @@ class TensorBase:
     return [self.__class__(impl) for impl in chunked_impls]
   
   def split(self, split: Union[int, List[int]], dim: int = 0):
-    print("split called with split=", split, "dim=", dim)
     if not isinstance(dim, int):
       raise TypeError(f"Expected int for dim, got {type(dim).__name__}")
     split_impls = cp.split(self._impl, split, dim)
@@ -511,7 +492,6 @@ def tensor_op(op_name, Function_name):
       
       module = importlib.import_module("clownpiece.autograd.function")
       FunctionClass = getattr(module, Function_name)
-      # print("[in tensor_op decorator:] function is ", str(function))
       return function(*args, **kwargs, FunctionClass=FunctionClass)
     
     return wrapped_function
@@ -551,7 +531,6 @@ class Tensor(TensorBase):
   #   Other
   # """
   def backward(self, grad: Optional["Tensor"]=None):
-    print("[call] backward in Tensor")
     from clownpiece.autograd.autograd import backward
     backward(self, grad)
       
@@ -659,7 +638,6 @@ class Tensor(TensorBase):
   @tensor_op('__mul__', 'Mul')
   @scalar_to_tensor
   def __mul__(self, other, FunctionClass=None)->"Tensor":
-    print("Tensor __mul__ called with other:", other)
     return FunctionClass().apply(self, other)
     
   @tensor_op('__rmul__', 'Mul')
@@ -682,10 +660,8 @@ class Tensor(TensorBase):
   # """
   @tensor_op('matmul', 'MatMul')
   def matmul(self, other, FunctionClass=None)->"Tensor":
-    print("[call] matmul Tensor")
     if not isinstance(other, Tensor):
       raise TypeError(f"Expected Tensor, got {type(other).__name__}")
-    print(type(FunctionClass).__name__)
     return FunctionClass().apply(self, other)
   
   def __matmul__(self, other)->"Tensor":    
@@ -814,7 +790,6 @@ def zeros_like(tensor: Tensor, requires_grad=False) -> Tensor:
   return Tensor.zeros(tensor.shape, requires_grad=requires_grad)
 
 def ones(shape, requires_grad=False):
-  # print("[call] ones that create a Tensor", flush=True)
   return Tensor.ones(shape, requires_grad=requires_grad)
 
 def ones_like(tensor: Tensor, requires_grad=False) -> Tensor:

@@ -54,8 +54,6 @@ class Function(Node):
     
     # run forward pass
     def apply(self, *args, **kwargs):
-        print("[call] apply in Function", flush=True)
-        print("has %d args, has %d kv pairs" % (args.__len__(), kwargs.__len__()))
         # step 1. initialize self.ctx and populate self.next_edges
         if self.ctx is None:
             self.ctx = Context()
@@ -63,18 +61,15 @@ class Function(Node):
         self.next_edges = [Edge.gradient_edge(tensor) for tensor in args]
         
         # step 2. outputs = self.forward(...) with no_grad
-        print("step2")
         with no_grad():
             outputs = self.forward(self.ctx, *args, **kwargs)  # outputs should be tensors
         
         is_list = isinstance(outputs, (list, tuple))
-        print("is_list?", is_list)
 
         if not is_list:
             outputs = wrap_tuple(outputs)
 
         # step 3. set grad_fn for outputs to self (and ouput_nr)
-        print("step3")
         i = 0
         for out in outputs:
             out.grad_fn = self
@@ -83,31 +78,14 @@ class Function(Node):
             i += 1
 
         # step 4. return outputs
-        print("step4")
-        print(type(outputs[0]).__name__)
         return outputs if is_list else outputs[0]
     
     # run backward pass
     def run(self, *args):
-        print("[call] run in Function", flush=True)
-        print("args are")
-        for ag in args:
-            print(ag)
-        print("there are %d args" % args.__len__())
-
         # step 1. grad_inputs = self.backward(...) with no_grad
         with no_grad():
             grad_inputs = self.backward(self.ctx, *args)
         # step 2. return grad_inputs
-        print("grad_inputs are ", type(grad_inputs).__name__)
-        if isinstance(grad_inputs, (list, tuple)):
-            print("is tuple")
-            print(type(grad_inputs[0]).__name__)
-            for gd in grad_inputs:
-                print(gd)
-        else:
-            print(grad_inputs)
-        print("[out] run in Function")
         return grad_inputs
 
 class AccumulateGrad(Function):
@@ -128,14 +106,11 @@ class AccumulateGrad(Function):
     
     @staticmethod
     def backward(ctx: Context, output_grad: Tensor):
-        print("[call] backward in AccumulateGrad")
-        print("output_grad is ", output_grad)
         input = ctx.input
         if input.requires_grad:
             if input.grad is None:
                 input.grad = zeros_like(input)
             input.grad += output_grad
-        print("[ok]")
         return input.grad
 
 """
@@ -194,21 +169,17 @@ class Neg(Function):
 
 # backward method for broadcast
 def reduce_broadcast(grad_output: Tensor, input_shape: List[int], output_shape: List[int], end_dim: int = 0) -> Tensor:
-    print("[call] reduce broadcast")
     # end_dim argument is for matmul, which only broadcasts dim <= dim() - 2
-    
-    # print("at first i is %d, j is %d" % (i, j))
+
     while grad_output.shape.__len__() > input_shape.__len__():
         grad_output = grad_output.sum(0, keepdims=False)
 
     n = input_shape.__len__() - end_dim
     for i in range(n):
         if input_shape[i] == 1 and output_shape[i] > 1:
-            print("i is ", i)
             print(input_shape, output_shape)
             grad_output = grad_output.sum(i, keepdims=True)
 
-    print("after reduce: grad_output is ", grad_output)
     return grad_output
 
 # binary op forward decorator
@@ -248,7 +219,6 @@ class Add(Function):
     @staticmethod
     @binary_op_backward_wrapper
     def backward(ctx: Context, grad_output: Tensor):
-        print("[call] Add backward")
         return grad_output, grad_output
     
 class Sub(Function):
@@ -343,7 +313,6 @@ class Tanh(Function):
 class Clamp(Function):
     @staticmethod
     def forward(ctx: Context, input: Tensor, min_val: float, max_val: float):
-        print("[call] Clamp in Function")
         ctx.min = min_val
         ctx.max = max_val
         ctx.save_for_backward(input)
@@ -351,7 +320,6 @@ class Clamp(Function):
         
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor):
-        print("[call] backward in Clamp")
         input, = ctx.get_saved_tensors()
         mask = (ctx.min < input) * (input < ctx.max)
         return grad_output * mask, None, None
@@ -411,13 +379,11 @@ class Sqrt(Function):
 class MatMul(Function):
     @staticmethod
     def forward(ctx: Context, input1: Tensor, input2: Tensor):
-        print("[call] forward in MatMul")
         ctx.save_for_backward(input1, input2)
         return input1.matmul(input2)
     
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor):
-        print("[call] backward in MatMul", flush=True)
         input1, input2, = ctx.get_saved_tensors()
         d1, d2 = input1.dim(), input2.dim()
 
@@ -431,10 +397,6 @@ class MatMul(Function):
             input2 = input2.unsqueeze(1)
             grad_output = grad_output.unsqueeze(-2).transpose(-1, -2)
 
-        print("grad_output shape ", grad_output.shape)
-        print("input1 shape ", input1.shape)
-        print("input2 shape ", input2.shape)
-        print("input2.trans ", input2.transpose(-1, -2))
         grad_input1_broadcasted = grad_output.matmul(input2.transpose(-1, -2))
         grad_input2_broadcasted = input1.transpose(-1, -2).matmul(grad_output)
 
@@ -519,7 +481,6 @@ class Mean(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor):
-        print("[call] backward in Mean")
         dim, keepdims, input_shape = ctx.dim, ctx.keepdims, ctx.input_shape
         if keepdims == False:
             grad_output = grad_output.unsqueeze(dim)
@@ -614,9 +575,6 @@ class Chunk(Function):
         
     @staticmethod
     def backward(ctx: Context, *grad_outputs: Tensor):
-        print("[call] backward in Chunk")
-        # print("does grad_outputs require grad? ", grad_outputs[0].requires_grad)
-        # print("dim is ", ctx.dim)
         base_list = [TensorBase(_) for _ in grad_outputs]
         grad_input = TensorBase.cat(base_list, dim = ctx.dim)
         return grad_input, None, None
@@ -645,8 +603,6 @@ class Stack(Function):
         dim = ctx.dim
         grad_inputs = grad_output.chunk(grad_output.shape[dim], dim)
         squeezed_grad_inputs = [Tensor.squeeze(gi, dim) for gi in grad_inputs]
-        # print("squeezed_grad_inputs are ", type(squeezed_grad_inputs).__name__)
-        # print(type(squeezed_grad_inputs[0]).__name__)
         return tuple(squeezed_grad_inputs) + (None, )
         
     
