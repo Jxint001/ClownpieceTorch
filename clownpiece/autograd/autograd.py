@@ -4,9 +4,9 @@ from typing import Dict, Iterable, List, Optional, Union, Any
 from clownpiece.tensor import Tensor, ones_like, zeros_like
 from clownpiece.utils_ import wrap_tuple
 
-from queue import Queue
+import queue
 from collections import deque
-from threading import Thread
+from threading import Thread, Lock
 
 """
     Autograd Module
@@ -142,6 +142,7 @@ class GraphTask():
         if not roots:
             raise ValueError("roots is empty")
     
+        self.lock = Lock()
         self.roots = roots
         self.nodes = []
         self.dependencies = {}
@@ -151,7 +152,7 @@ class GraphTask():
         
     # helper function to assign node_id and initialize self.nodes, dependencies and inputs_buffer
     def _construct_graph(self):
-        que = Queue()
+        que = queue.Queue()
         for rt in self.roots:
             que.put(rt)
 
@@ -190,7 +191,8 @@ class GraphTask():
         
     # execute
     def run(self):
-        self._run_single_thread()
+        # self._run_single_thread()
+        self._run_multi_thread()
 
     # for debug
     def _run_single_thread(self):
@@ -210,28 +212,52 @@ class GraphTask():
 
     # for production
     def _run_multi_thread(self):
-        # just skip this now...
-        # [TODO]
         # step1. maintain a shared ready queue for NodeTasks
-        sh_q = Queue()  # shared_queue
+        sh_q = queue.Queue()
+        finished = set()
+
+        for node in self.roots:
+            sh_q.put(NodeTask(node, self.inputs_buffer[node], self))
         # step2. def a worker function, similar to _run_single_thread.
         # be careful: do not use `while queue is not empty` as exit condition directly. (why?)
         def worker():
-            pass
+            while True:
+                try:
+                    node_task = sh_q.get_nowait()
+                except queue.Empty:
+                    # check whether all node_task are finished
+                    with self.lock:
+                        if len(finished) == len(self.nodes):
+                            break
+                        else:
+                            continue
+                node_task.run()
+                with self.lock:
+                    finished.add(node_task.node)
+                for e in node_task.node.next_edges:
+                    nxt = e.node
+                    if nxt is not None:
+                        with self.lock:
+                            self.dependencies[nxt] -= 1
+                            if self.dependencies[nxt] == 0:
+                                sh_q.put(NodeTask(nxt, self.inputs_buffer[nxt], self))
+                                self.inputs_buffer.pop(nxt)
+                sh_q.task_done()
     
         # step3. spawn multiple worker threads.
-        num_thread = 5
-        threads = [Thread(target = worker, args = (),  kwargs=()) for i in range(num_thread)]
+        num_thread = 2
+        threads = [Thread(target = worker, args = (),  kwargs={}) for _ in range(num_thread)]
         for t in threads:  t.start()
         # step4. wait for threads to join.
         for t in threads:  t.join()
                     
     # accumulate input_grad to self.inputs_buffer[node][input_nr]
     def fill_input(self, node: Node, input_grad: Tensor, input_nr: int):
-        if self.inputs_buffer[node][input_nr] is None:
-            self.inputs_buffer[node][input_nr] = input_grad
-        else:
-            self.inputs_buffer[node][input_nr] += input_grad
+        with self.lock:
+            if self.inputs_buffer[node][input_nr] is None:
+                self.inputs_buffer[node][input_nr] = input_grad
+            else:
+                self.inputs_buffer[node][input_nr] += input_grad
 
 
 """
