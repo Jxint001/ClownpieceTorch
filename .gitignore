@@ -198,7 +198,6 @@ cython_debug/
 
 test.py
 tests/**/data/
-data/
 tests/week3/minist/data/
 tests/week4/fashion-minist/data/
 
