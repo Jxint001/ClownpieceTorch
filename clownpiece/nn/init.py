@@ -7,7 +7,7 @@ import math
 
 _gain_lookup_table = {
   "linear": 1.0,
-  "idenity": 1.0,
+  "identity": 1.0,
   "sigmoid": 1.0,
   "tanh": 5/3,
   "relu": math.sqrt(2),
@@ -15,7 +15,7 @@ _gain_lookup_table = {
   "selu": 3/4
 }
 
-def calcuate_gain(nonlinearity: str, a: float = 0) -> float:
+def calculate_gain(nonlinearity: str, a: float = 0) -> float:
   nonlinearity = nonlinearity.lower()
 
   if nonlinearity not in _gain_lookup_table:
@@ -51,33 +51,74 @@ def _calculate_fan_in_and_fan_out(tensor: Tensor) -> tuple[int, int]:
     
     return fan_in, fan_out
 
+def generate(tensor: Tensor, func):
+  vals = [func() for _ in range(tensor.__len__())]
+  tensor.copy_(Tensor(vals).reshape(tensor.shape))
+
+@_no_grad_init
 def constants_(tensor: Tensor, value: float):
-  pass
+  generate(tensor, lambda: value)
 
+@_no_grad_init
 def zeros_(tensor: Tensor):
-  pass  
+  generate(tensor, lambda: 0)
 
+@_no_grad_init
 def ones_(tensor: Tensor):
-  pass
+  generate(tensor, lambda: 1)
 
+@_no_grad_init
 def normal_(tensor: Tensor, mean: float = 0.0, std: float = 1.0):
-  pass
+  generate(tensor, lambda: random.gauss(mean, std))
 
+@_no_grad_init
 def uniform_(tensor: Tensor, low: float = 0.0, high: float = 1.0):
-  pass
+  generate(tensor, lambda: random.uniform(low, high))
 
 def xavier_uniform_(tensor: Tensor, gain: float = 1.0):
-  pass
+  fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
+  a = gain * math.sqrt(6.0 / (fan_in + fan_out))
+  
+  generate(tensor, lambda: random.uniform(-a, a))
+  
+  return tensor
 
 def xavier_normal_(tensor: Tensor, gain: float = 1.0):
-  pass
+  fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
+  std = gain * math.sqrt(2.0 / (fan_in + fan_out))
+  
+  generate(tensor, lambda: random.gauss(0, std))
+  
+  return tensor
 
 def kaiming_uniform_(
     tensor: Tensor, a: float = 0, mode: str = "fan_in", nonlinearity: str = "leaky_relu"
 ):
-  pass
+  if mode not in ["fan_in", "fan_out"]:
+      raise ValueError(f"Invalid mode: {mode}. Choose 'fan_in' or 'fan_out'")
+  
+  fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
+  fan = fan_in if mode == "fan_in" else fan_out
+  gain = calculate_gain(nonlinearity, a)
+  
+  bound = gain * math.sqrt(3.0 / fan)
+
+  generate(tensor, lambda: random.uniform(-bound, bound))
+  
+  return tensor
 
 def kaiming_normal_(
     tensor: Tensor, a: float = 0, mode: str = "fan_in", nonlinearity: str = "leaky_relu"
 ):
-  pass
+  if mode not in ["fan_in", "fan_out"]:
+      raise ValueError(f"Invalid mode: {mode}. Choose 'fan_in' or 'fan_out'")
+  
+  fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
+  fan = fan_in if mode == "fan_in" else fan_out
+  gain = calculate_gain(nonlinearity, a)
+  
+  std = gain / math.sqrt(fan)
+  
+  generate(tensor, lambda: random.gauss(0.0, std))
+  
+  return tensor
