@@ -12,6 +12,14 @@ all tests passed!
 ==================================================
 ```
 
+## Questions answer
+
+### Why we cannot use while queue is not empty as exit condition directly in multithreading case?  
+因为多线程情况下 queue 为空不等价于所有节点的任务都已经完成。可能出现线程1中 queue 已经空了但是线程2中还有节点任务在执行的情况。应该直接统计完成节点数。
+
+### Why multithreading in backward execution matters, even if there is operator level multithreading?
+操作符级别的多线程优化的是单个运算操作内部的计算。反向传播过程中层与层之间有依赖关系，但是又不一定是“直线型”的完全依赖关系，一个点可能有多个依赖，这多个依赖可能具有一定独立性。操作符级别多线程，不能同时处理不同的依赖。所以需要反向传播中的多线程。
+
 ## Challenges encountered and solutions
 
 感觉这次很难像 week1 的内容一样列出来一条条问题，加上时间原因，就暂时概括性地描述困难和解决方法了。  
