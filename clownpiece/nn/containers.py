@@ -8,12 +8,14 @@ class Sequential(Module):
     super().__init__()
     for idx, module in enumerate(modules):
       self.register_modules(str(idx), module)
+    self.mod_seq = list(modules)
 
 
   def forward(self, input):
     x = input
-    for module in self.modules():
+    for module in self.mod_seq:
       if module is not self:
+        # print(module.__class__.__name__)
         x = module.forward(x)
     return x
 

@@ -36,11 +36,11 @@ class Linear(Module):
       init.uniform_(self.bias, -bound, bound)
 
   def forward(self, x: Tensor) -> Tensor:
-    if self.training:
-      ret = x.matmul(self.weight.transpose(-1, -2)) + self.bias
-      print("ret is", ret)
-      print("bias is", self.bias)
-      return ret
+    # print("before linear: ", x)
+    # print(str(self))
+    ret = x.matmul(self.weight.transpose(-1, -2)) + self.bias
+    # print("after linear: ", ret)
+    return ret
 
   def extra_repr(self):
     return f"in_features={self.in_features}, out_features={self.out_features}, bias={self.bias is not None}"
@@ -83,13 +83,21 @@ class LayerNorm(Module):
         self.beta = self.register_parameter("beta", None)
 
     def forward(self, x: Tensor) -> Tensor:
+      # print("before op x is ", x)
       fornorm = x.reshape([-1, self.num_features])
+      # print("fornorm is ", fornorm)
       mean = fornorm.mean(dim=-1, keepdims=True)
+      # print("mean is ", mean)
       var = fornorm.var(dim=-1, keepdims=True)
+      # print("var is ", var)
       x_hat = (x - mean) / (var + self.eps).sqrt()
+      # print("x_hat is ", x_hat)
       if self.affine:
         x_hat = x_hat * self.gama + self.beta
-      return x_hat.reshape(list(x.shape))
+      
+      ret = x_hat.reshape(list(x.shape))
+      # print("ret is ", ret)
+      return ret
 
     def extra_repr(self):
       return f"num_features={self.num_features}, eps={self.eps}, affine={self.affine}"

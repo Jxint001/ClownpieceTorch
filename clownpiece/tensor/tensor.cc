@@ -166,7 +166,10 @@ namespace at {
     if (a.dim() < 2 || b.dim() < 2) { throw std::runtime_error("Invalid dim in matrix_mult"); }
     int dima = a.dim(), dimb = b.dim(), dimn = std::max(dima, dimb);
     int m = a.size(dima - 2), n = a.size(dima - 1), k = b.size(dimb - 1);
-    if (n != b.size(dimb - 2)) { throw std::runtime_error("not aligned in matrix_mult"); }
+    if (n != b.size(dimb - 2)) {
+      std::cout << "n " << n << " b.size(dimb - 2): " << b.size(dimb - 2) << std::endl;
+      throw std::runtime_error("not aligned in matrix_mult"); 
+    }
 
     /* Broadcast leading dimensions */
     shape_t na_shape = a.shape_, nb_shape = b.shape_;
@@ -905,7 +908,8 @@ namespace at {
         }
     }
     if (missing_dim != -1) {
-        new_shape[missing_dim] = n / known_size;
+      new_shape[missing_dim] = n / known_size;
+      // new_shape.insert(new_shape.begin() + missing_dim, n / known_size);
     }
 
     int new_num_elements = 1;
@@ -914,7 +918,8 @@ namespace at {
     }
 
     if (new_num_elements != n) {
-        throw std::runtime_error("Incompatible shape for reshape");
+      std::cout << "new_num_elemets is " << new_num_elements << " n is " << n <<"known_size " << known_size << std::endl;// std::endl;
+      throw std::runtime_error("Incompatible shape for reshape");
     }
 
     Tensor new_tensor(new_shape);
@@ -954,7 +959,9 @@ namespace at {
         new_num_elements *= dim;
     }
     if (new_num_elements != n) {
-        throw std::runtime_error("Incompatible shape for reshape");
+        std::cout << "new_num_elemets is " << new_num_elements << " n is " << n <<"known_size " << known_size << std::endl;// std::endl;
+        std::cout << temp.shape_ << std::endl;
+        throw std::runtime_error("Incompatible shape for view");
     }
     /**/
     fill_in_stride(temp.shape_, temp.stride_);
@@ -1353,8 +1360,12 @@ namespace at {
     Week3 adds-on
   */
   Tensor Tensor::mean(int dim, bool keepdims) const {
+    dim = check_index_range(dim, shape_.size(), "Tensor::mean");
     Tensor s = sum(dim, keepdims);
     int size_along_dim = shape_[dim];
+
+    // std::cout << size_along_dim << std::endl;
+    // std::cout << s / dtype(size_along_dim) << std::endl;
 
     return s / static_cast<dtype>(size_along_dim);
   }

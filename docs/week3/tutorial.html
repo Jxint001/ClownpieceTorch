@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>tutorial.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="clownpiece-torch-week-3">Clownpiece-torch Week 3</h1>
+<p>In Week 2, we built a powerful autograd engine capable of tracking computations and automatically calculating gradients. While this is the core of modern deep learning frameworks, writing complex models using only raw tensor operations can be cumbersome and disorganized. This week, we will build a <strong>Module</strong> system, inspired by PyTorch's <code>torch.nn.Module</code>, to bring structure, reusability, and convenience to our model-building process.</p>
+<p>The module system provides a way to encapsulate parts of a neural network into reusable components. It handles the management of learnable parameters, sub-modules, and stateful buffers, allowing you to define complex architectures in a clean, object-oriented way.</p>
+<p>A simple example in PyTorch illustrates the concept:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> torch
+<span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn
+
+<span class="hljs-comment"># Define a custom network by subclassing nn.Module</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SimpleNet</span><span class="hljs-params">(nn.Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, input_size, hidden_size, output_size)</span>:</span>
+        super().__init__()
+        <span class="hljs-comment"># Define layers as attributes. They are automatically registered.</span>
+        self.layer1 = nn.Linear(input_size, hidden_size)
+        self.activation = nn.ReLU()
+        self.layer2 = nn.Linear(hidden_size, output_size)
+
+    <span class="hljs-comment"># Define the forward pass</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x)</span>:</span>
+        x = self.layer1(x)
+        x = self.activation(x)
+        x = self.layer2(x)
+        <span class="hljs-keyword">return</span> x
+
+<span class="hljs-comment"># Instantiate the model</span>
+model = SimpleNet(input_size=<span class="hljs-number">784</span>, hidden_size=<span class="hljs-number">128</span>, output_size=<span class="hljs-number">10</span>)
+print(model)
+
+<span class="hljs-comment"># The module system makes it easy to inspect all parameters</span>
+print(<span class="hljs-string">"\nNamed Parameters:"</span>)
+<span class="hljs-keyword">for</span> name, param <span class="hljs-keyword">in</span> model.named_parameters():
+    print(<span class="hljs-string">f"<span class="hljs-subst">{name}</span>: <span class="hljs-subst">{param.shape}</span>"</span>)
+</div></code></pre>
+<p>Outputs:</p>
+<pre class="hljs"><code><div>SimpleNet(
+  (layer1): Linear(in_features=<span class="hljs-number">784</span>, out_features=<span class="hljs-number">128</span>, bias=<span class="hljs-literal">True</span>)
+  (activation): ReLU()
+  (layer2): Linear(in_features=<span class="hljs-number">128</span>, out_features=<span class="hljs-number">10</span>, bias=<span class="hljs-literal">True</span>)
+)
+
+Named Parameters:
+layer1.weight: torch.Size([<span class="hljs-number">128</span>, <span class="hljs-number">784</span>])
+layer1.bias: torch.Size([<span class="hljs-number">128</span>])
+layer2.weight: torch.Size([<span class="hljs-number">10</span>, <span class="hljs-number">128</span>])
+layer2.bias: torch.Size([<span class="hljs-number">10</span>])
+</div></code></pre>
+<p>As you can see, the <code>nn.Module</code> base class provides a clean structure and automatically tracks all the learnable parameters within the nested layers.</p>
+<h2 id="unifying-computation-and-state">Unifying Computation and State</h2>
+<p>The first design philosophy is the <strong>unified managment of tightly coupled parts</strong>.</p>
+<p>A neural network layer isn't just a single function; it's a stateful computation. It has a defined transformation (the computation) and it has internal variables that persist across calls (the state). Therefore, module comes to help by organizing of <em>computation</em> and <em>states</em> together.</p>
+<p>In implement, module elegantly organizes this into three fundamental components:</p>
+<ul>
+<li>
+<p><strong>Forward Pass</strong>: It defines the transformation the module applies to its inputs. You can think of it as the mathematical function the layer represents, like a linear transformation or a convolution. The forward takes both user specified inputs and module's internal states to produce the outputs.</p>
+</li>
+<li>
+<p><strong>Parameters</strong>: These represent the learnable state of the module, often referred to as <strong>weights</strong>. When you 'train' a model, you are optimizing these parameters to achieve some objective (i.e., minizing a loss function, or maximizing downstream task's accuracy). Parameters account for the majority of state in a typical deep learning model.</p>
+</li>
+<li>
+<p><strong>Buffers</strong>: These represent the non-learnable state. Sometimes a module needs to keep track of data that isn't a learnable parameter, such as the running mean and variance in a batch normalization layer. They are saved along with the parameters, but they are not updated by the optimizer during backpropagation. You will only see buffers in few special modules.</p>
+</li>
+</ul>
+<p>Clearly, forward pass defines the computation, while parameters and buffers form the state.</p>
+<blockquote>
+<p>Both parameters and buffers can change across calls, so the term <em>non-learnable</em> does <strong>NOT</strong> imply <em>constant</em> or <em>immutable</em>. It's more of a model structrual concept: whether they can be optimized, or only for temporary storage purpose.</p>
+</blockquote>
+<hr>
+<h4 id="example">Example</h4>
+<p>Let's consider a <code>Linear</code> module, which performs $y=x@W^T+b$ (we will explain the reason for transpose later).</p>
+<p>Its forward pass might be like:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Linear</span><span class="hljs-params">(Module)</span>:</span>
+  W: Tensor <span class="hljs-comment"># shape [ouput_channel * input_channel]</span>
+  b: Tensor <span class="hljs-comment"># shape [ouput_channel]</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x: Tensor)</span> -&gt; Tensor:</span> <span class="hljs-comment"># shape [... * input_channel] -&gt;  [... * output_channel]</span>
+    W, b = self.W, self.b
+    y = x @ W.transpose() + b 
+    <span class="hljs-keyword">return</span> y
+</div></code></pre>
+<p>where <code>@</code>, <code>transpose</code>, and <code>+</code> are traced by autograd engine, and dispatched into tensor library at runtime.</p>
+<p><code>self.W, self.b</code> are parameters, and there are no buffers in <code>Linear</code>.</p>
+<hr>
+<h2 id="modular-and-hierarchical-organization">Modular and Hierarchical Organization</h2>
+<h3 id="modularity-to-simpilicity-reusability-and-flexibility">Modularity $\to$ Simpilicity, Reusability and Flexibility</h3>
+<p>The second core design philosophy emphasizes <strong>modularity</strong>. Just as individual layers encapsulate their own logic and variables, these self-contained modules can be nested and connected to form intricate network architectures.</p>
+<p>By breaking down a complex neural network into smaller, manageable modules, the design process becomes much simpler. Instead of dealing with a monolithic block of code, you can focus on developing and testing individual components.</p>
+<p>Moreover, modules are highly reusable.</p>
+<ul>
+<li>Mainstream DL frameworks offer highly-optimized, well-tested implementations for common modules like Linear, Conv2d, BatchNorm.</li>
+<li>Even domain-specific modules can be reused. FlashAttention, RotaryEmbedding are widely adopted in different transformer models.</li>
+</ul>
+<p>Modularity also introduces immense flexibility. Suppose you're an enthusiastic researcher with an idea to alter the structure of an existing state-of-the-art model. With a modular design, you can easily swap out or introduce new components, without having to rebuild the entire network from scratch or understanding other parts' implementation detail. This iterative approach is crucial for innovation and experimentation in deep learning, especially when models are getting more and more complicated nowadays.</p>
+<hr>
+<h3 id="hierarchy-to-ease-of-design-and-system-managment">Hierarchy $\to$ Ease of Design and System Managment</h3>
+<p>Beyond modularity, the module system is inherently <strong>hierarchical</strong>, which is excellent news for system designers. Higher-level modules are composed of smaller, more basic modules, but never the other way around.</p>
+<p>However, from a functional standpoint, there's no noticeable difference between a basic layer and a complex block; they both remain unified under the <em>module abstraction</em> with great modularity.</p>
+<blockquote>
+<p>Modularity and hierarchy usually contradict each other, so this example is interesting.</p>
+</blockquote>
+<p>With hierarchical structure, we can conceptualize a module's composition as a tree, where clear parent-child relationships are defined.</p>
+<p>This allows a parent module to manage the states of all its children. This centralized state management is beneficial for saving, updating, or restoring the entire module's state.</p>
+<hr>
+<h4 id="example-unfolding-a-gpt-like-model">Example: Unfolding a GPT-like Model</h4>
+<p>Consider a <strong>GPT-model</strong>. Its module structure will be like:</p>
+<pre class="hljs"><code><div>GPTModel
+├── Embedding <span class="hljs-comment"># Projects input IDs into hidden space</span>
+├── Positional Encoding <span class="hljs-comment"># Adds positional information</span>
+└── Transformer Blocks <span class="hljs-comment"># Manipulates the hidden states</span>
+    ├── Transformer Block <span class="hljs-number">1</span>
+    │   ├── Multi-Head Attention <span class="hljs-comment"># Attention mechanism</span>
+    │   │   ├── Linear <span class="hljs-comment"># for Q, K, V projections</span>
+    │   │   └── Linear <span class="hljs-comment"># for output projection</span>
+    │   ├── Layer Normalization <span class="hljs-comment"># Layer Norm</span>
+    │   └── Feed-Forward Network <span class="hljs-comment"># FFN</span>
+    │       ├── Linear
+    │       └── Activation
+    └── Transformer Block <span class="hljs-number">2</span>
+        ├── Multi-Head Attention
+        │   ├── Linear
+        │   └── Linear
+        ├── Layer Normalization
+        └── Feed-Forward Network
+            ├── Linear
+            └── Activation
+    └── ... (repeated Transformer Blocks)
+</div></code></pre>
+<p>There might also be a <code>LM Head</code> layer at the end to project hidden states back into the probability space of output IDs, depending on the downstream task.</p>
+<p><strong>Modularity</strong></p>
+<p>All these modules are implemented separately elsewhere and then assembled to form the <code>GPTModel</code>. Beyond <code>GPTModel</code> itself, these <code>Transformer Blocks</code> can be reused in other architectures like ViT, Llama, etc., perhaps with slight modifications to adapt to specific contexts.</p>
+<p><strong>Hierarchy</strong></p>
+<p>The <code>GPTModel</code> is the top-level module containing <code>Embedding</code>, <code>Positional Encoding</code>, and the collection of <code>Transformer Blocks</code>.</p>
+<ul>
+<li>Each <code>Transformer Block</code> encapsulating <code>Multi-Head Attention</code>, <code>Layer Normalization</code>, and a <code>Feed-Forward Network</code>.
+<ul>
+<li>Further, <code>Multi-Head Attention</code> and <code>Feed-Forward Network</code> are themselves composed of simpler <code>Linear</code> and <code>Activation</code> modules.</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>Note that the tree hierarchy does not imply sequential recursive execution of childeren modules. The exact computation logic is defined by user in forward function and may form a complex DAG.</p>
+</blockquote>
+<blockquote>
+<p>Yet, it's true that we register child module in the order they are executed by convention, and, most of the time, they are sequential.</p>
+</blockquote>
+<hr>
+<h2 id="layered-system-design">Layered System Design:</h2>
+<p>When working on the code this week, you may find that the autograd engine and tensor library hide the most complexitiy of underyling computation and backward tracing. Modules feel like a simple wrapper around the autograd system with state management.</p>
+<p>Yes,that's exactly why we design it this way: seperating the system functionalities into distinct layers, where higher layer only relies on lower layers, and mostly, only its adjacent layer. This brings great similicity for both design and implement.</p>
+<p>Module system is completely agnoistic to how autograd engine or tensor library work under the hood -- it just assumes they will do what they promise to do properly. Conversely, autograd engine or tensor library need not care how module system operates.</p>
+<blockquote>
+<p>Though, from a designer's perspective, it is important to design good interfaces, with which higher layer can utilize lower layer efficiently and easily. This always requires a global view of the system.</p>
+</blockquote>
+<p>Meanwhile this layered abstration is perfect in our problem, it is usually over-simplified or ideal in more complex systems. In those cases, engineers takes a middle ground between monolithic and layered design (i.e., modularity when possible). You will learn that in next year's operating system course.</p>
+<h2 id="%F0%9F%93%98-additional-tutorials">📘 Additional Tutorials</h2>
+<p>Understanding how <code>nn.Module</code> works is fundamental to using (and then implementing) any modern deep learning library effectively.</p>
+<ul>
+<li>
+<p><a href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html"><strong><code>torch.nn.Module</code> Official Documentation</strong></a>
+The definitive reference for all <code>nn.Module</code> functionality.</p>
+</li>
+<li>
+<p><a href="https://pytorch.org/tutorials/beginner/introyt/modelsyt_tutorial.html"><strong>Building Models with PyTorch</strong></a>
+A beginner-friendly tutorial on how to define and use <code>nn.Module</code> to build networks.</p>
+</li>
+<li>
+<p><a href="https://pytorch.org/tutorials/beginner/saving_loading_models.html"><strong>Saving and Loading Models in PyTorch</strong></a>
+A comprehensive guide on using <code>state_dict</code> to persist and restore model state.</p>
+</li>
+</ul>
+<hr>
+<h1 id="code-guide">Code Guide</h1>
+<hr>
+<p>This week's focus leans more towards user-friendly system design rather than intricate low-level engineering. The elegance of a well-structured system lies in its simplicity for the end-user. So, to grasp what &quot;user-friendly&quot; means:</p>
+<h3 id="we-highly-recommend-you-getting-familiar-with-pytorchs-module-system-before-proceeding-to-code-your-own"><strong>We highly recommend you getting familiar with PyTorch's module system before proceeding to code your own!</strong></h3>
+<p>Please refer to Addtional Tutorials above.</p>
+<hr>
+<h2 id="code-structure-overview">Code Structure Overview</h2>
+<pre class="hljs"><code><div>clownpiece
+|-nn
+| |- activations.py
+| |- containers.py
+| |- init.py
+| |- layers.py
+| |- loss.py
+| |- module.py
+|-...
+</div></code></pre>
+<ul>
+<li>
+<p>The <code>module.py</code> holds the core definition of abstract class <code>Module</code>, centralizing common functionalities for all modules.</p>
+</li>
+<li>
+<p>The <code>init.py</code> holds utility to initialize parameters in different probabilistic ways.</p>
+</li>
+<li>
+<p>Other files contain concrete modules of a specific type suggested by the file name.</p>
+</li>
+</ul>
+<p>We'll follow these steps for implementation:</p>
+<ol>
+<li>
+<p>First, implement the core <code>Module</code> class in <code>module.py</code>, including</p>
+<ul>
+<li>parameter and buffer management</li>
+<li>state_dict save and load</li>
+<li>__repr__ method to visualize module structure</li>
+</ul>
+</li>
+<li>
+<p>Next, create several simplest concrete modules to rigorously test if the <code>Module</code>'s fundamental functionalities are correctly working.</p>
+</li>
+<li>
+<p>Then, develop the <code>init.py</code> utilities for parameter initialization.</p>
+</li>
+<li>
+<p>Finally, complete the implementation of other specific modules in <code>activations.py</code>, <code>layers.py</code>, <code>containers.py</code>, and <code>loss.py</code>.</p>
+</li>
+<li>
+<p>Try out what you module system with two traditional DL tasks.</p>
+</li>
+</ol>
+<p>Due to the workload restriction and incompleteness of our autograd engine and tensor library, we can only explore a small portion of common modules.</p>
+<blockquote>
+<p>Anyway, a complete DL framework cannot be built from scratch in only weeks; don't be disappointed; We will build some interesting application with what we have!🤗</p>
+</blockquote>
+<hr>
+<h2 id="part-1-core-module-system">Part 1: Core Module System</h2>
+<h3 id="parametersbufferschildren-management">Parameters/Buffers/Children Management</h3>
+<p>Starting by defining state storage for module, namely <code>Parameter</code> and <code>Buffer</code>.</p>
+<p>They are trivial subclass of Tensor, with a preferred <code>requires_grad</code> value.</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Parameter</span><span class="hljs-params">(Tensor)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, data)</span>:</span>
+    super().__init__(data, requires_grad=<span class="hljs-literal">True</span>)
+    
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Buffer</span><span class="hljs-params">(Tensor)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, data)</span>:</span>
+    super().__init__(data, requires_grad=<span class="hljs-literal">False</span>)
+</div></code></pre>
+<p>Then, let's look at module's member variables:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Module</span><span class="hljs-params">(object)</span>:</span>
+  training: bool
+
+  _parameters: Dict[str, Parameters]
+  _buffers: Dict[str, Buffer]
+  _modules: Dict[str, <span class="hljs-string">"Module"</span>]
+</div></code></pre>
+<p>The <code>training</code> indicates whether the module is in training or inferencing mode. This affects the behavior of <code>forward</code>, for example:</p>
+<ul>
+<li><code>Dropout</code> is disabled during inferencing.</li>
+<li><code>BatchNorm</code> uses mean and var recorded from training as constant during inferencing</li>
+</ul>
+<p>These three dictionaries record <strong>immediate</strong> parameters, buffers, and child modules belonging to this module. (but not from childrens).</p>
+<p>You may have noticed that, in pytorch, when you assign a parameter <code>P</code> to attribute of module <code>M</code>, then <code>P</code> appears in <code>M</code>'s <code>parameters()</code> method without the need of any explicit declaration &quot;I am a parameter, please register me&quot;.</p>
+<p>This is accomplished by overriding <code>__setattr__(self, name: str, value: Any)</code> function: whenever <code>self.name = value</code> happens, this method is called. We can hijack the default assignment behavior, and detects, if <code>value</code> is instance of <code>Parameter</code>, <code>Buffer</code>, or <code>Module</code>, and register them to the corresponding dict. (if <code>value</code> is None of them, just call <code>object.__setattr__(self, name, value)</code>)</p>
+<p><code>__getattr__(self, name)</code> comes in couple with <code>__setattr__</code>, but it is called <strong>only when</strong> <code>name</code> is not found as ordinary attribute (i.e., <code>name</code> is hijecked at <code>__setattr__</code>).</p>
+<p>Please complete:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Module</span><span class="hljs-params">(object)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-comment"># It's a good practice to add a mechanism to enforce that:</span>
+    <span class="hljs-comment">#   All subclasses of Module must call super().__init__ in their __init__</span>
+    <span class="hljs-comment">#   (User often forgets to do so!)</span>
+    <span class="hljs-comment"># For example:</span>
+    <span class="hljs-comment">#   add a boolean variable _init_called, </span>
+    <span class="hljs-comment">#   and check at beginning of __setattr__ call.</span>
+    <span class="hljs-comment">#</span>
+    <span class="hljs-comment"># this mechanism is optional and does not account for score.</span>
+
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">train</span><span class="hljs-params">(self, flag: bool = True)</span>:</span>
+    <span class="hljs-comment"># set module and submodule to training = flag</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">eval</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-comment"># set module and submodule to inferencing mode</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__setattr__</span><span class="hljs-params">(self, name, value)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__getattr__</span><span class="hljs-params">(self, name)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<p>with these registry directories, it's easy to implement:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Module</span><span class="hljs-params">(object)</span>:</span>
+
+  <span class="hljs-string">"""
+    Parameter
+  """</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">register_parameter</span><span class="hljs-params">(self, name: str, param: Optional[Parameter])</span>:</span>
+    <span class="hljs-comment"># why does this function even exist? </span>
+    <span class="hljs-comment"># well, sometimes we want to register None as placeholder for disabled optioanl parameters. (e.g., bias in Linear)</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">parameters</span><span class="hljs-params">(self, recursive: bool=True)</span> -&gt; Iterable[Parameter]:</span>
+    <span class="hljs-comment"># return a generator of all parameters in this module</span>
+    <span class="hljs-comment"># yield immediate parameters first,</span>
+    <span class="hljs-comment"># if recursive, then yield parameters from children.</span>
+
+    <span class="hljs-comment"># HINT: use `yield` and `yield from` semantic</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">named_parameters</span><span class="hljs-params">(self, recursive: bool=True)</span> -&gt; Iterable[Tuple[str, Parameter]]:</span>
+    <span class="hljs-comment"># similar to parameters, but return a name along with the parameter</span>
+    <span class="hljs-comment"># the name is obtained by joining the recurisve attr name with '.'</span>
+    <span class="hljs-comment"># for example</span>
+    <span class="hljs-string">"""
+      class A(Module):
+        a: Parameter
+        b: B
+
+      class B(Moudle)
+        c: Parameter
+      
+      Then, A.named_parameters() -&gt; [
+        ("a", ...),
+        ("b.c", ...)
+      ]
+    """</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-string">"""
+    Buffer
+  """</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">register_buffer</span><span class="hljs-params">(self, name: str, buffer: Optional[Buffer])</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">buffers</span><span class="hljs-params">(self, recursive: bool=True)</span> -&gt; Iterable[Buffer]:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">named_buffers</span><span class="hljs-params">(self, recursive: bool=True)</span> -&gt; Iterable[Tuple[str, Buffer]]:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-string">"""
+    Modules
+  """</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">register_modules</span><span class="hljs-params">(self, module: Optional[<span class="hljs-string">"Module"</span>])</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">modules</span><span class="hljs-params">(self, recursive: bool=True)</span> -&gt; Iterable["Module"]:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">named_modules</span><span class="hljs-params">(self, recursive: bool=True)</span> -&gt; Iterable["Module"]:</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<hr>
+<h3 id="state-dict">State Dict</h3>
+<p>As mentioned earlier, the module system manages state and therefore must provide a mechanism for saving and restoring this state from persistent storage. This capability is crucial for storing trained model weights and reloading them later—potentially on a different machine—for deployment or further use.</p>
+<p>The model's state is exported using <code>state_dict()</code>, which returns a flat dictionary mapping names to tensors (<code>name -&gt; Tensor</code>) (including parameters and buffers). The keys in this dictionary correspond to the names returned by the module’s <code>named_parameters()</code> and <code>named_buffers()</code> methods (joining attr name by '.').</p>
+<p>The state dict of our first sample <code>SimpleNet</code> would be like:</p>
+<pre class="hljs"><code><div>{
+  layer1.weight: Tensor(128, 784),
+  layer1.bias: Tensor(128,),
+  layer2.weight: Tensor(10, 128),
+  layer2.bias: Tensor(10,),
+}
+</div></code></pre>
+<p>Note that, when the tensor in state_dict is a shallow reference to real tensors. That's saying: no physcial copy at state_dict call.</p>
+<p>We have implemented the pickle method (serialization) for Tensor class, so, you should be able to pickle the state dict to files.</p>
+<p>The reverse operation is called <code>load_state_dict(state_dict)</code>: loads a dictionary from <code>state_dict()</code> call. The loading involves copying data from state_dict, not by assignment, since tensors in state_dict are shallow references.</p>
+<p>The <code>load_state_dict</code> have a <code>strict</code> argument. When set, it checks that:</p>
+<ol>
+<li>All the keys in state_dict are used. (i.e., no redundant weights)</li>
+<li>All tensors' in state_dict matches the expected shape.</li>
+<li>All expected keys are present in state_dict. (i.e., no missing weights)</li>
+</ol>
+<p>Raise RuntimeError if any of the constraints is violated.</p>
+<p>Disabled optional weights should be present in state_dict, with <code>value = None</code>.</p>
+<p>Please complete:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Module</span><span class="hljs-params">(object)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">state_dict</span><span class="hljs-params">(self)</span> -&gt; Dict:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_state_dict</span><span class="hljs-params">(self, state: Dict[str, Tensor], strict: bool = True)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<hr>
+<h3 id="module-representation-repr-and-extrarepr">Module Representation: <code>__repr__</code> and <code>extra_repr</code></h3>
+<p>Every module should provide a clear and informative string representation, especially for debugging and visualization purposes. This is achieved through the <code>__repr__</code> method, which defines how the module is printed when you run <code>print(module)</code> or simply evaluate it in a REPL.</p>
+<p>By default, the base <code>Module.__repr__()</code> method is implemented to recursively list all submodules along with their names and arguments. To customize how a module is represented (without changing the entire structure), subclasses should override the <code>extra_repr()</code> method instead.</p>
+<h4 id="repr-full-representation"><code>__repr__()</code>: Full Representation</h4>
+<p>This method automatically constructs a hierarchical string representation of the module and its children. It includes:</p>
+<ul>
+<li>The class name</li>
+<li>Any extra information provided by <code>extra_repr()</code></li>
+<li>All submodules (indented for readability)</li>
+</ul>
+<p>You <strong>should not</strong> override <code>__repr__</code> directly unless absolutely necessary. Instead, customize the output of <code>extra_repr()</code>.</p>
+<p>To be specific, the output format can be detailed as:</p>
+<pre class="hljs"><code><div><span class="hljs-comment">#basic:</span>
+ModuleClassName
+
+<span class="hljs-comment">#if extra_repr:</span>
+ModuleClassName(extra_repr)
+
+<span class="hljs-comment">#if has children:</span>
+ModuleClassName(
+  (Child1Name): Child1Repr
+  (Child2Name): Child2Repr
+  ...
+)
+
+<span class="hljs-comment"># add two space for indents for every recursion.</span>
+</div></code></pre>
+<h4 id="extrarepr-module-specific-info"><code>extra_repr()</code>: Module-Specific Info</h4>
+<p>Override <code>extra_repr()</code> to include module-specific configuration like layer sizes, flags (e.g., <code>bias=True</code>), etc. This string is inserted inside the <code>__repr__</code> output right after the module name.</p>
+<p>Example for a custom linear layer:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Linear</span><span class="hljs-params">(Module)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, in_features, out_features, bias=True)</span>:</span>
+    ...
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">extra_repr</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-string">f"in_features=<span class="hljs-subst">{self.in_features}</span>, out_features=<span class="hljs-subst">{self.out_features}</span>, bias=<span class="hljs-subst">{self.bias <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>}</span>"</span>
+</div></code></pre>
+<p>When printed, this would result in:</p>
+<pre class="hljs"><code><div>Linear(in_features=784, out_features=128, bias=True)
+</div></code></pre>
+<p>This convention ensures a clean, standardized interface for module representation across all submodules in a deep learning model.</p>
+<p>Recall the first example of <code>SimpleNet</code>, its __repr__ is:</p>
+<pre class="hljs"><code><div>SimpleNet(
+  (layer1): Linear(in_features=<span class="hljs-number">784</span>, out_features=<span class="hljs-number">128</span>, bias=<span class="hljs-literal">True</span>)
+  (activation): ReLU()
+  (layer2): Linear(in_features=<span class="hljs-number">128</span>, out_features=<span class="hljs-number">10</span>, bias=<span class="hljs-literal">True</span>)
+)
+</div></code></pre>
+<p>Your implement for __repr__ will be awarded the credit as long as it's format is clear, properly indented and new-lined, and includes extra_repr, module class name, children name. It won't be judged by full-text matching.</p>
+<p>Please complete:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Module</span><span class="hljs-params">(object)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__repr__</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">extra_repr</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-string">""</span>
+</div></code></pre>
+<hr>
+<h2 id="forward">Forward</h2>
+<p>The <code>forward</code> for Module is an abstract method, and should be overridden by subclasses.</p>
+<p>In PyTorch, user should use <code>__call__</code> method instead of <code>forward</code>, since it wraps in pre/post forward hooks. In our case, <code>__call__</code> and <code>forward</code> are just aliases.</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Module</span><span class="hljs-params">(object)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, *args, **kwargs)</span>:</span>
+    <span class="hljs-keyword">raise</span> NotImplementedError(<span class="hljs-string">"forward method not implemented"</span>)
+  
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__call__</span><span class="hljs-params">(self, *args, **kwargs)</span>:</span>
+    <span class="hljs-keyword">return</span> self.forward(*args, **kwargs)
+</div></code></pre>
+<hr>
+<h2 id="part-2-simplest-concrete-modules">Part 2: Simplest Concrete Modules</h2>
+<p><strong>When implementing concrete modules, you should provide extra_repr whenever applicable. The convention is to include all arguments passed to <code>__init__</code></strong>.</p>
+<!-- Linear, Sigmoid -->
+<h3 id="linear">Linear:</h3>
+<p>Linear layer captures an affine mapping: $y=x@W^T + b$.</p>
+<p>where:</p>
+<ul>
+<li>
+<p>$x$ is a (batch of) $n$-dim vectors, $y$ is a (batch of) $m$-dim vectors, $W^T$ is $(n,m)$-matrix (the weight), $b$ is $m$-dim vector (the bias).</p>
+</li>
+<li>
+<p>that saying, $n$ is the number of input channel, $m$ is the number of output channel.</p>
+</li>
+<li>
+<p>the $b$ is an optional parameter. If disabled, $y=x@W^T$.</p>
+</li>
+</ul>
+<blockquote>
+<p>Why store $W$ in transposed way?  When processed in matmul, the right operand $W^T$ is to be tranposed back into $W$, which is contiguous!</p>
+</blockquote>
+<pre class="hljs"><code><div><span class="hljs-comment"># layers.py</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Linear</span><span class="hljs-params">(Module)</span>:</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, in_features: int, out_features: int, bias: bool=True)</span>:</span>
+    <span class="hljs-comment"># remember to wrap W and b in Parameter class, otherwise they won't be registered.</span>
+    <span class="hljs-comment"># for now, init W, b with empty</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x: Tensor)</span> -&gt; Tensor:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">extra_repr</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<h3 id="tanh">Tanh</h3>
+<p>Tanh is a simple wrapper around <code>class Tanh(Function)</code> to bring it into module system.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># activations.py</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Tanh</span><span class="hljs-params">(Module)</span>:</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x: Tensor)</span> -&gt; Tensor:</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<p>Now, upon finishing this, you may run <code>grade_part1.py</code> to see if core module system is correct, and <code>grade_part2.py</code> to see if <code>Linear</code>, and <code>Tanh</code> are correct.</p>
+<p>Please attach the output of <code>__repr__</code> test in <code>grade_part1.py</code> to your report, as it must be graded manually. (if you pass full text match test, for sure you will get the score, though.)</p>
+<hr>
+<h2 id="part-3-init">Part 3: Init</h2>
+<p>Proper initialization of a model's parameters is a critical step that can significantly impact the training process. A good initialization strategy helps in several ways:</p>
+<ul>
+<li><strong>Preventing Vanishing/Exploding Gradients</strong>: If weights are too small, gradients can shrink to zero as they propagate backward through the network, halting learning. If they are too large, gradients can grow exponentially, leading to unstable training.</li>
+<li><strong>Breaking Symmetry</strong>: If all weights in a layer are initialized to the same value, all neurons in that layer will learn the same features. Proper initialization ensures that neurons start with different weights and can learn diverse representations.</li>
+<li><strong>Speeding up Convergence</strong>: A well-chosen initialization places the model in a &quot;reasonable&quot; starting state, often closer to a good solution, which can accelerate the convergence of the optimization algorithm.</li>
+</ul>
+<p>In this step, you will implement several standard initialization schemes in <code>clownpiece/nn/init.py</code>. These functions will modify the input tensor <em>in-place</em> (hence the trailing underscore in their names) and should be performed <strong>without tracking gradients</strong>. (with <code>no_grad</code> context)</p>
+<h3 id="simple-initializations">Simple Initializations:</h3>
+<p><strong>Constant:</strong></p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">constants_</span><span class="hljs-params">(tensor: Tensor, value: float)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">zeros_</span><span class="hljs-params">(tensor: Tensor)</span>:</span>
+  <span class="hljs-keyword">pass</span>  
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">ones_</span><span class="hljs-params">(tensor: Tensor)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<p><strong>Normal:</strong></p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">normal_</span><span class="hljs-params">(tensor: Tensor, mean: float = <span class="hljs-number">0.0</span>, std: float = <span class="hljs-number">1.0</span>)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<p><strong>Uniform:</strong></p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">uniform_</span><span class="hljs-params">(tensor: Tensor, low: float = <span class="hljs-number">0.0</span>, high: float = <span class="hljs-number">1.0</span>)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<blockquote>
+<p>Hint: you may find python's default random library helpful. Also try a helper function to initialize tensor's data in place with a generator and within no_grad context.</p>
+</blockquote>
+<h3 id="fan-in-and-fan-out">Fan-in and Fan-out</h3>
+<p>Most modern initialization strategies scale the weights based on the number of input and output connections to a neuron, referred to as <code>fan_in</code> and <code>fan_out</code>. For a standard <code>Linear</code> layer with weight shape <code>(out_features, in_features)</code>:</p>
+<ul>
+<li><code>fan_in</code> is the number of input units, which is <code>in_features</code>. (<code>shape[-1]</code>)</li>
+<li><code>fan_out</code> is the number of output units, which is <code>out_features</code>. (<code>shape[-2]</code>)</li>
+</ul>
+<h3 id="gain">Gain</h3>
+<p>The statistical stability is of great importance during training, and one good rule is to initialize parameters in a way that</p>
+<ul>
+<li>variance of input/output is consistent across layer.</li>
+</ul>
+<p>This is the primiary goal of many advanced initialzation function.</p>
+<p>However, activation function complicates this as it distorts output and thus its variance.</p>
+<ul>
+<li>A <strong>ReLU</strong> activation function sets all negative inputs to zero. For a symmetric input distribution centered at zero, this means half of the outputs become zero, which cuts the variance in half.</li>
+<li>A <strong>tanh</strong> function squashes its inputs into the range [-1, 1]. While its derivative is 1 at the origin (preserving variance for small inputs), it saturates for larger inputs, generally reducing variance.</li>
+</ul>
+<p>An additional scalar at initialization to compentsate this is <strong>gain</strong>. Using $\text{gain}=g$ scales the variance by $g^2$</p>
+<p>With some statistical assumptions, we can obtain the recommended gain value:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> math
+_gain_lookup_table = {
+  <span class="hljs-string">"linear"</span>: <span class="hljs-number">1.0</span>,
+  <span class="hljs-string">"idenity"</span>: <span class="hljs-number">1.0</span>,
+  <span class="hljs-string">"sigmoid"</span>: <span class="hljs-number">1.0</span>,
+  <span class="hljs-string">"tanh"</span>: <span class="hljs-number">5</span>/<span class="hljs-number">3</span>,
+  <span class="hljs-string">"relu"</span>: math.sqrt(<span class="hljs-number">2</span>),
+  <span class="hljs-string">"leaky_relu"</span>: <span class="hljs-keyword">lambda</span> a: math.sqrt(<span class="hljs-number">2</span> / (<span class="hljs-number">1</span> + a * a)),
+  <span class="hljs-string">"selu"</span>: <span class="hljs-number">3</span>/<span class="hljs-number">4</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">calcuate_gain</span><span class="hljs-params">(nonlinearity: str, a: float = <span class="hljs-number">0</span>)</span> -&gt; float:</span>
+  nonlinearity = nonlinearity.lower()
+
+  <span class="hljs-keyword">if</span> nonlinearity <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> _gain_lookup_table:
+    <span class="hljs-keyword">raise</span> KeyError(<span class="hljs-string">f"Unkown nonlinearity: <span class="hljs-subst">{nonlinearity}</span>, choices are <span class="hljs-subst">{list(_gain_lookup_table.keys())}</span>"</span>)
+  
+  value = _gain_lookup_table[nonlinearity]
+  <span class="hljs-keyword">if</span> nonlinearity == <span class="hljs-string">"leaky_relu"</span>:
+    <span class="hljs-keyword">return</span> value(a)
+  <span class="hljs-keyword">else</span>:
+    <span class="hljs-keyword">return</span> value
+
+</div></code></pre>
+<h3 id="xavier-glorot-initialization">Xavier (Glorot) Initialization</h3>
+<p>Proposed by Glorot and Bengio in 2010, Xavier initialization is designed to maintain the variance of activations and gradients across layers, particularly for saturating activation functions like <code>sigmoid</code> and <code>tanh</code>.</p>
+<p>The goal is to set the variance of the weights <code>W</code> such that:
+$$
+\text{Var}(W) = \frac{2}{\text{fan_in} + \text{fan_out}}
+$$</p>
+<p>You will implement two versions:</p>
+<ol>
+<li>
+<p><strong><code>xavier_uniform_(tensor, gain=1.0)</code></strong>: Samples from a uniform distribution $\mathcal{U}(-a, a)$, where:
+$$
+a = \text{gain} \times \sqrt{\frac{6}{\text{fan_in} + \text{fan_out}}}
+$$</p>
+</li>
+<li>
+<p><strong><code>xavier_normal_(tensor, gain=1.0)</code></strong>: Samples from a normal distribution $\mathcal{N}(0, \sigma^2)$, where:
+$$
+\sigma = \text{gain} \times \sqrt{\frac{2}{\text{fan_in} + \text{fan_out}}}
+$$</p>
+</li>
+</ol>
+<h3 id="kaiming-he-initialization">Kaiming (He) Initialization</h3>
+<p>Proposed by He et al. in 2015, Kaiming initialization is specifically designed for layers followed by a Rectified Linear Unit (ReLU) or its variants. Since ReLU sets all negative inputs to zero, it effectively halves the variance of the activations. Kaiming initialization compensates for this.</p>
+<p>The goal is to set the variance of the weights <code>W</code> to preserve the variance of the activations through the layer in the forward pass:
+$$
+\text{Var}(W) = \frac{2}{\text{fan_in}}
+$$</p>
+<p>You will implement two versions:</p>
+<ol>
+<li>
+<p><strong><code>kaiming_uniform_(tensor, a=0, mode=&quot;fan_in&quot;, nonlinearity=&quot;leaky_relu&quot;)</code></strong>: Samples from a uniform distribution $\mathcal{U}(-b, b)$, where:
+$$
+b = \text{gain} \times \sqrt{\frac{3}{\text{fan_mode}}}
+$$
+The <code>fan_mode</code> can be either &quot;fan_in&quot; or &quot;fan_out&quot;.</p>
+<p>The <code>a</code> is the negative slope for leaky ReLU. (to be introduced later, for now, just use <code>calucalte_gain</code>)</p>
+</li>
+<li>
+<p><strong><code>kaiming_normal_(tensor, a=0, mode=&quot;fan_in&quot;, nonlinearity=&quot;leaky_relu&quot;)</code></strong>: Samples from a normal distribution $\mathcal{N}(0, \sigma^2)$, where:
+$$
+\sigma = \frac{\text{gain}}{\sqrt{\text{fan_mode}}}
+$$</p>
+</li>
+</ol>
+<p>Please complete the following functions in <code>init.py</code>. You can use python's default random library if it helps.</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># init.py</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">xavier_uniform_</span><span class="hljs-params">(tensor: Tensor, gain: float = <span class="hljs-number">1.0</span>)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">xavier_normal_</span><span class="hljs-params">(tensor: Tensor, gain: float = <span class="hljs-number">1.0</span>)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">kaiming_uniform_</span><span class="hljs-params">(
+    tensor: Tensor, a: float = <span class="hljs-number">0</span>, mode: str = <span class="hljs-string">"fan_in"</span>, nonlinearity: str = <span class="hljs-string">"leaky_relu"</span>
+)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">kaiming_normal_</span><span class="hljs-params">(
+    tensor: Tensor, a: float = <span class="hljs-number">0</span>, mode: str = <span class="hljs-string">"fan_in"</span>, nonlinearity: str = <span class="hljs-string">"leaky_relu"</span>
+)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<p>After implementing these, you can use them to initialize the weights of your <code>Linear</code> layer. A common practice is to create a <code>reset_parameters</code> method inside your module to contain the initialization logic.</p>
+<ul>
+<li>initialize both weight and bias with $\text{uniform}(-b, b), b = \sqrt{\dfrac 1 {\text{fan_in}}}$</li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-comment"># Example usage in Linear.__init__</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Linear</span><span class="hljs-params">(Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, in_features, out_features, bias=True)</span>:</span>
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight = Parameter(Tensor.empty(out_features, in_features))
+        <span class="hljs-keyword">if</span> bias:
+            self.bias = Parameter(Tensor.empty(out_features))
+        <span class="hljs-keyword">else</span>:
+            self.register_parameter(<span class="hljs-string">'bias'</span>, <span class="hljs-literal">None</span>)
+        self.reset_parameters()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">reset_parameters</span><span class="hljs-params">(self)</span> -&gt; <span class="hljs-keyword">None</span>:</span>
+        bound = math.sqrt(<span class="hljs-number">1</span> / self.in_features)
+        init.uniform_(self.weight, -bound, bound)
+        <span class="hljs-keyword">if</span> self.bias <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+          init.uniform_(self.bias, -bound, bound)
+        <span class="hljs-comment"># or equvialently, use </span>
+        <span class="hljs-comment"># init.kaiming_uniform_(self.weight, a = math.sqrt(5))</span>
+</div></code></pre>
+<p>Run <code>grade_part3.py</code> to test your code. For advanced initialization methods (Xavier and Kaiming), we run each test 1000 times on 10×20 tensors, collecting all 200,000 data points to perform comprehensive statistical validation. We then directly compare the sample mean and variance/standard deviation against theoretical expected values using appropriate tolerance thresholds.</p>
+<p>The statistical validation includes:</p>
+<ul>
+<li><strong>Mean validation</strong>: Absolute deviation should be less than 0.1</li>
+<li><strong>Variance/Standard deviation validation</strong>: Relative error should be less than 30-40%</li>
+<li><strong>Range validation</strong>: For uniform distributions, all values should be within expected bounds</li>
+</ul>
+<p>With 200,000 data points per test, the statistical estimates are highly reliable. It's very unlikely that your program will fail by chance if implemented correctly. The large sample size ensures robust detection of implementation errors while maintaining stability against random fluctuations.</p>
+<hr>
+<h2 id="part-4-concrete-modules">Part 4 Concrete Modules</h2>
+<h2 id="activations">Activations</h2>
+<p>Besides <code>tanh</code>, which is a common activation function for recurrent neural networks, there are several other important activation functions you should know.</p>
+<h3 id="sigmoid">Sigmoid</h3>
+<p>The <strong>Sigmoid</strong> function:
+$$
+\sigma(x) = \frac{1}{1 + e^{-x}}
+$$
+squashes its input into the range (0, 1). It was historically popular but is now less common in hidden layers due to the vanishing gradient problem and its non-zero-centered output. It's primarily used in the output layer of a binary classifier to produce a probability.</p>
+<h3 id="tanh">Tanh</h3>
+<p>The <strong>Hyperbolic Tangent (tanh)</strong> function:
+$$
+\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}
+$$
+squashes its input into the range $(-1, 1)$. Its zero-centered output often makes it a better choice than sigmoid for hidden layers, but it still suffers from vanishing gradients for large inputs.</p>
+<h3 id="relu-rectified-linear-unit">ReLU (Rectified Linear Unit)</h3>
+<p>The <strong>ReLU</strong> function,
+$$
+f(x) = \begin{cases}
+x &amp; x \ge 0 \
+0 &amp; x &lt; 0
+\end{cases}
+$$</p>
+<p>is the most widely used activation function in deep learning. It is computationally efficient and helps mitigate the vanishing gradient problem for positive inputs. However, it can suffer from the &quot;Dying ReLU&quot; problem, where neurons can become inactive and only output zero.</p>
+<h3 id="leaky-relu">Leaky ReLU</h3>
+<p><strong>Leaky ReLU</strong> is a variant of ReLU that aims to solve the &quot;Dying ReLU&quot; problem. It is defined as</p>
+<p>$$
+f(x) = \begin{cases} x &amp; \text{if } x &gt; 0 \ \alpha x &amp; \text{if } x \le 0 \end{cases}
+$$</p>
+<p>where $\alpha$ is a small positive constant (e.g., $0.01$). This allows a small, non-zero gradient when the unit is not active.</p>
+<blockquote>
+<p>Activations in ReLU family are not differentiable at $0$, but can be trivially assign either left or right derivative as a solution.</p>
+</blockquote>
+<p>Please complete:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Sigmoid</span><span class="hljs-params">(Module)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Tanh</span><span class="hljs-params">(Module)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ReLU</span><span class="hljs-params">(Module)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LeakyReLU</span><span class="hljs-params">(Module)</span>:</span>
+  <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<blockquote>
+<p>Theoretically speaking, these operations should be supported by C++ backend. But I haven't decided which activations to include during week1, so ..., please write them as combination of elementary ops.</p>
+</blockquote>
+<blockquote>
+<p>Besides, you might want to add corresponding <code>Function</code> of these activations to <code>autograd/function.py</code> for a unified framework. (not mandatory)</p>
+</blockquote>
+<hr>
+<h2 id="containers">Containers</h2>
+<p>Containers are utilities to organize modules into groups. We will write three most common containers: <code>Sequential</code>, <code>ModuleList</code>, and <code>ModuleDict</code>.</p>
+<h3 id="sequential">Sequential</h3>
+<p><code>Sequential</code> is a container that chains modules together in the order they are passed to the constructor. The output of one module is fed as the input to the next. This is perfect for simple, feed-forward architectures like a basic multi-layer perceptron (MLP).</p>
+<p>Example:</p>
+<pre class="hljs"><code><div>model = Sequential(
+    Linear(<span class="hljs-number">784</span>, <span class="hljs-number">128</span>),
+    ReLU(),
+    Linear(<span class="hljs-number">128</span>, <span class="hljs-number">10</span>)
+)
+
+output = model(input_tensor)
+</div></code></pre>
+<p>The <code>forward</code> method is implicitly defined to pass the input through each layer in sequence.</p>
+<h3 id="modulelist">ModuleList</h3>
+<p><code>ModuleList</code> holds submodules in a list-like structure. Like a regular Python list, you can iterate over it, append to it, concatenate them, and access modules by index. However, unlike <code>Sequential</code>, it does <strong>not</strong> have a default <code>forward</code> method. User must define the <code>forward</code> pass themselves.</p>
+<p>The design purpose of <code>ModuleList</code> is that: if you put modules into a regular list, and assign it to a parent module, they won't be tracked as children! (a common mistake for beginner to module system). <code>ModuleList</code> solves this as itself is a <code>Module</code> subclass.</p>
+<p>Example:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SequntialLinear</span><span class="hljs-params">(Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        super().__init__()
+        self.layers = ModuleList(
+          [Linear(<span class="hljs-number">10</span>, <span class="hljs-number">10</span>) <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> range(<span class="hljs-number">5</span>)]
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x)</span>:</span>
+        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers:
+            x = layer(x)
+        <span class="hljs-keyword">return</span> x
+</div></code></pre>
+<h3 id="moduledict">ModuleDict</h3>
+<p><code>ModuleDict</code> holds submodules in a dictionary-like structure, allowing you to access them by string keys. Similar to <code>ModuleList</code>, it does <strong>not</strong> have a <code>forward</code> method. The design purpose of <code>ModuleDict</code> is the same as <code>ModuleList</code>.</p>
+<p>Example:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyModule</span><span class="hljs-params">(Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        super().__init__()
+        self.choices = ModuleDict({
+            <span class="hljs-string">'1'</span>: Linear(<span class="hljs-number">1</span>, <span class="hljs-number">10</span>, <span class="hljs-number">3</span>),
+            <span class="hljs-string">'2'</span>: Linear(<span class="hljs-number">10</span>, <span class="hljs-number">10</span>)
+        })
+        self.activations = nn.ModuleDict([
+            [<span class="hljs-string">'relu'</span>, ReLU()],
+            [<span class="hljs-string">'selu'</span>, SELU()]
+        ])
+
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x, choice, act)</span>:</span>
+        x = self.choices[choice](x)
+        x = self.activations[act](x)
+        <span class="hljs-keyword">return</span> x
+</div></code></pre>
+<p>Please complete:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># containers.py</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Sequential</span><span class="hljs-params">(Module)</span>:</span>
+  
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, *modules: Module)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(input)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ModuleList</span><span class="hljs-params">(Module)</span>:</span>
+  
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, modules: Iterable[Module] = None)</span>:</span>
+    <span class="hljs-comment"># hint: try to avoid using [] (which is mutable) as default argument. it may lead to unexpected behavor.</span>
+    <span class="hljs-comment"># also be careful to passing dictionary or list around in function, which may be modified inside the function.</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__add__</span><span class="hljs-params">(self, other: Iterable[Module])</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__setitem__</span><span class="hljs-params">(self, index: int, value: Module)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__getitem__</span><span class="hljs-params">(self, index: int)</span> -&gt; Module:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__delitem__</span><span class="hljs-params">(self, index: int)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__len__</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__iter__</span><span class="hljs-params">(self)</span> -&gt; Iterable[Module]:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">append</span><span class="hljs-params">(self, module: Module)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">extend</span><span class="hljs-params">(self, other: Iterable[Module])</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ModuleDict</span><span class="hljs-params">(Module)</span>:</span>
+  
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, dict_: Dict[str, Module])</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__setitem__</span><span class="hljs-params">(self, name: str, value: Module)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__getitem__</span><span class="hljs-params">(self, name: str)</span> -&gt; Module:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__delitem__</span><span class="hljs-params">(self, name: str)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__len__</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__iter__</span><span class="hljs-params">(self)</span> -&gt; Iterable[str]:</span>
+    <span class="hljs-keyword">pass</span>
+  
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">keys</span><span class="hljs-params">(self)</span> -&gt; Iterable[str]:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">values</span><span class="hljs-params">(self)</span> -&gt; Iterable[Module]:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">items</span><span class="hljs-params">(self)</span> -&gt; Iterable[Tuple[str, Module]]:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">update</span><span class="hljs-params">(self, dict_: Dict[str, Module])</span>:</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<h2 id="layers">Layers</h2>
+<p>Below are the main layers in <code>clownpiece/nn/layers.py</code>. Each is a subclass of <code>Module</code>, automatically registers parameters, supports <code>state_dict</code>, and applies proper weight initialization.</p>
+<h3 id="embedding">Embedding</h3>
+<p><strong>Embedding</strong> performs a lookup from an embedding matrix:</p>
+<p>$$
+\text{out}[i] = \text{weight}[i]
+$$</p>
+<ul>
+<li>Weight: shape <code>(num_embd, embd_dim)</code>, initialized with $\mathcal N(0,1)$.</li>
+<li>Forward input: integer tensor of indices of shape <code>(...)</code></li>
+<li>Returns: tensor of shape <code>(..., embd_dim)</code></li>
+</ul>
+<p>You may think embedding as a linear layer, where input $i$ represent the $i$-th one-hot vector of num_embd dimensions. The weight matmuls to the on-hot vector and produce the output.</p>
+<p>Examples: input is a batch of token ids, the output would be corresponding word vectors in the hidden space.</p>
+<h3 id="layernorm">LayerNorm</h3>
+<p><strong>LayerNorm</strong> normalizes each sample over its last $d$ dimensions:
+$$
+\hat{x} = \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}}
+$$
+where $\mu$ and $\sigma^2$ are the mean and variance computed over the normalized dimensions. Optional affine scale and shift are applied when <code>affine=True</code>.</p>
+<h3 id="batchnorm">BatchNorm</h3>
+<p><strong>BatchNorm</strong> normalizes across a batch of $n$ samples:
+$$
+\mu_B = \frac1m \sum_{i=1}^n x_i,
+\quad
+\sigma^2_B = \frac1m \sum_{i=1}^n (x_i - \mu_B)^2
+$$</p>
+<p>During training, running mean and var are estimated with momentum $m$:
+$$
+\mu_{\text{running}} \leftarrow (1-m) \cdot \mu_{\text{runing}} + m \cdot \mu_B \
+\sigma_{\text{running}}^2 \leftarrow (1-m) \cdot \sigma_{\text{running}}^2 + m \cdot \sigma_B^2
+$$</p>
+<p>and inputs are normalized with $\mu_B, \sigma_B$ as in LayerNorm. Optional affine scale and shift are applied when <code>affine=True</code>.</p>
+<p>During evaluation, stored running mean and variance are used instead of batch statistics.</p>
+<h3 id="multiheadattention">MultiheadAttention</h3>
+<p><strong>MultiheadAttention</strong> implements scaled dot-product attention for multiple heads:</p>
+<p>Single head attention:
+$$
+\text{Attention}(Q,K,V) = \text{softmax}\Bigl(\frac{QK^T}{\sqrt{d_k}}\Bigr),V
+$$</p>
+<p>Multihead-attention splits the embedding into <code>num_heads</code> heads of dimension $d_k=\dfrac{\text{embed_dim}}{\text{num_heads}}$, applies attention in parallel, and concatenates the outputs back.</p>
+<p>A final linear projection combines the heads back to <code>embed_dim</code>.</p>
+<blockquote>
+<p>I admit that the introduction to layers here may be over-simplified. Please refer to torch document for more detail.</p>
+<ul>
+<li><a href="https://docs.pytorch.org/docs/stable/generated/torch.nn.Embedding.html">Embedding</a></li>
+<li><a href="https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html">MultiheadAttention</a></li>
+</ul>
+</blockquote>
+<p>Please complete:</p>
+<pre class="hljs"><code><div>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Embedding</span><span class="hljs-params">(Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, num_embd: int, embd_dim: int)</span>:</span>
+      <span class="hljs-keyword">pass</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x: Tensor)</span> -&gt; Tensor:</span>
+      <span class="hljs-keyword">pass</span>
+    
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LayerNorm</span><span class="hljs-params">(Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, num_features: int, eps: float = <span class="hljs-number">1e-5</span>, affine: bool = True)</span>:</span>
+      <span class="hljs-comment"># input is reshaped to (-1, num_features) for normalziation.</span>
+      <span class="hljs-comment"># for example:</span>
+      <span class="hljs-comment">#   to normalize last two dimensions of tensor (batch_size, height, width)</span>
+      <span class="hljs-comment">#   then num_features should be height x width</span>
+      <span class="hljs-comment"># this interface differs from pytorch</span>
+      <span class="hljs-keyword">pass</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x: Tensor)</span> -&gt; Tensor:</span>
+      <span class="hljs-keyword">pass</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BatchNorm</span><span class="hljs-params">(Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, num_features: int, eps: float = <span class="hljs-number">1e-5</span>, momentum: float = <span class="hljs-number">0.1</span>, affine: bool = True)</span>:</span>
+      <span class="hljs-keyword">pass</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x: Tensor)</span> -&gt; Tensor:</span>
+      <span class="hljs-keyword">pass</span>
+    
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MultiheadAttention</span><span class="hljs-params">(Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, hidden_dim: int, num_heads: int, bias: bool = True)</span>:</span>
+      <span class="hljs-keyword">pass</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, hidden_states: Tensor, attn_mask: Optional[Tensor] = None)</span>:</span>
+      <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<hr>
+<h2 id="loss">Loss</h2>
+<p>Loss functions are a critical component of the training process, quantifying the difference—or &quot;error&quot;—between a model's predictions and the ground truth labels. The goal of training is to adjust the model's parameters to minimize the value returned by the loss function.</p>
+<h3 id="mseloss-mean-squared-error">MSELoss (Mean Squared Error)</h3>
+<p><strong>Mean Squared Error</strong> is the standard loss function for <strong>regression tasks</strong>, where the goal is to predict a continuous value. It measures the average of the squares of the errors between the predicted and actual values.</p>
+<p>The formula for a batch of $N$ samples is:
+$$
+\mathcal{L}(y_{\text{pred}}, y_{\text{true}}) = \frac{1}{N} \sum_{i=1}^{N} (y_{\text{true}, i} - y_{\text{pred}, i})^2
+$$</p>
+<ul>
+<li>$y_{\text{true}}$ is the tensor of ground truth values.</li>
+<li>$y_{\text{pred}}$ is the tensor of model predictions.</li>
+</ul>
+<p>Squaring the difference penalizes larger errors more heavily and ensures the result is always non-negative.</p>
+<p>Also, MSE loss is perhas the most intuitive differentiable non-negative loss.</p>
+<h3 id="crossentropyloss">CrossEntropyLoss</h3>
+<p><strong>Cross-Entropy Loss</strong> is the standard loss function for <strong>classification tasks</strong>. It measures the dissimilarity between the predicted probability distribution and the true distribution (which is typically a one-hot vector where the correct class has a probability of 1 and all others have 0).</p>
+<p>For a single data point, the cross-entropy loss is calculated as:
+$$
+\mathcal{L}(y_{\text{pred}}, y_{\text{true}}) = - \sum_{c=1}^{C} y_{\text{true}, c} \cdot \log(y_{\text{pred}, c})
+$$</p>
+<ul>
+<li>$C$ is the number of classes.</li>
+<li>$y_{\text{true}, c}$ is 1 if $c$ is the correct class, and 0 otherwise.</li>
+<li>$y_{\text{pred}, c}$ is the model's predicted probability for class $c$.</li>
+</ul>
+<p>This equation simplifies to $-\log(p_k)$, where $p_k$ is the predicted probability of the correct class $k$. Minimizing this loss is equivalent to maximizing the log-probability of the correct class.</p>
+<blockquote>
+<p><strong>Numerical Stability</strong>: In common practice, <code>CrossEntropyLoss</code> is combined with a <code>LogSoftmax</code> function. This operation is more numerically stable than applying a <code>Softmax</code> and then a <code>log</code> separately by avoiding <code>log(0)</code>. User only feed logits (unnormalized output from classification model) and correct label to cross-entropy.
+A workaround in our case is to replace:</p>
+<pre class="hljs"><code><div>log_probs = logits.softmax(dim=<span class="hljs-number">-1</span>).log()
+</div></code></pre>
+<p>with</p>
+<pre class="hljs"><code><div>log_probs = logits - logits.exp().sum(dim=<span class="hljs-number">-1</span>, keepdims=<span class="hljs-literal">True</span>).log()
+</div></code></pre>
+</blockquote>
+<p>Please complete:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># loss.py</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MSELoss</span><span class="hljs-params">(Module)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, reduction: str = <span class="hljs-string">'mean'</span>)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, input: Tensor, target: Tensor)</span> -&gt; Tensor:</span>
+    <span class="hljs-keyword">pass</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CrossEntropyLoss</span><span class="hljs-params">(Module)</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, reduction: str = <span class="hljs-string">'mean'</span>)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, logits: Tensor, target: Tensor)</span> -&gt; Tensor:</span>
+    <span class="hljs-comment"># logits is of shape (..., num_class)</span>
+    <span class="hljs-comment"># target is of shape (...), and it's value indicate the index of correct label</span>
+
+    <span class="hljs-comment"># You need to ensure your implement is differentiable under our autograd engine.</span>
+    <span class="hljs-comment"># However, you can assume target has requires_grad=False and ignore the gradient flow towards it.</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<p>Run <code>grade_part4_{category of module}.py</code> to test your code, or <code>grade_part4.py</code> to test all.</p>
+<hr>
+<h1 id="putting-it-all-together">Putting It All Together</h1>
+<p>Congratulations! You have now built a complete, albeit miniature, core of a deep learning framework. What's left for next week are peripheral utilities that make the system more adaptive and easy to use in various scenarios (CV, Audio, etc.).</p>
+<p>For now, let's put your framework to the test with two classic machine learning tasks that don't require complex data loaders or pre-processing pipelines.</p>
+<hr>
+<h2 id="1-predict-real-estate-value-regression">1. Predict Real Estate Value (Regression)</h2>
+<p><strong>Task</strong>: Predict the price of a house based on several features. This is a typical <strong>regression</strong> problem, where the goal is to predict a continuous output value.</p>
+<p>Please complete the <code>tests/week3/estate_value_predict/main.ipynb</code>.</p>
+<hr>
+<h2 id="2-classify-handwritten-digits-classification">2. Classify Handwritten Digits (Classification)</h2>
+<p><strong>Task</strong>: Identify the digit (0 through 9) from a 28x28 pixel image of a handwritten number. This is a <strong>classification</strong> problem, where the goal is to predict a discrete category.</p>
+<p>Please complete the <code>tests/week3/mnist/main.ipynb</code>.</p>
+<hr>
+<h1 id="optional-challange-add-support-for-conv2d">Optional Challange: Add Support for Conv2d</h1>
+<p><s><strong>Due to TAs' design failure</strong></s> due to incomplete feature of our tensor library and autograd engine, we are unable to support a important class of Module: <strong>Convolution</strong>, which is dominant in previous era of DL (right before transformers).</p>
+<p>Your task is to add support for <code>Conv2D</code> in our system. This involves adding basic operations at C++ backend, binding in Python, Functions in autograd, and finally, a new <code>Conv2D</code> in module system.</p>
+<p>For what <code>Conv2D</code> is, refer to <a href="https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv2d.html">this link</a>.</p>
+<p>These two basic operations may be of your interests:</p>
+<ul>
+<li><strong>Unfold</strong>: also called <code>im2col</code>, which extends 2D image into <code>(num_patches, patch_dim)</code> given a specific kernel size. After this operation, Conv2D can be done by simply matmul with kernel. <a href="https://pytorch.org/docs/stable/generated/torch.nn.Fold.html">link</a></li>
+</ul>
+<pre class="hljs"><code><div>  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">Conv2D</span><span class="hljs-params">(images, kernel_size, kernel_weight)</span>:</span>
+    unfolded = unfold(images, kernel_size)
+    <span class="hljs-keyword">return</span> matmul(unfolded, kernel_weight)
+</div></code></pre>
+<ul>
+<li><strong>Fold</strong>: also called <code>col2im</code>, which reduces the results from unfold, summation over overlapped area, and average them. (but not strictly the reverse of unfold). You need this function for backward of unfold. <a href="https://docs.pytorch.org/docs/stable/generated/torch.nn.Unfold.html">link</a></li>
+</ul>
+<p>Besides, <strong>Padding</strong> may also be necessary.</p>
+<h3 id="your-task">Your Task:</h3>
+<ul>
+<li>Implement a <code>Conv2d</code> of the simplist case: <code>stride=1</code>, <code>padding='same'</code>, <code>dilation=1</code>,<code>groups=1</code>.
+<ul>
+<li>naive solution of &quot;for loops kernel&quot; in python is not allowed</li>
+<li>naive solution of &quot;for loops kernel&quot; in C++ is allowed, but only partial credit</li>
+<li>efficient solution using &quot;unfold&quot; is encouraged.</li>
+</ul>
+</li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Conv2D</span><span class="hljs-params">(Module)</span>:</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, in_channels, out_channels, kernel_size_height, kernel_size_width)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, x)</span>:</span>
+    <span class="hljs-keyword">pass</span>
+</div></code></pre>
+<ul>
+<li>Include a section in your report to clearly explain:
+<ul>
+<li>
+<p>How do you implement <code>Conv2d</code>?</p>
+</li>
+<li>
+<p>What's the exact semantic of <code>unfold</code> and it's backward? How can it be utilized in <code>Conv2d</code>?</p>
+<ul>
+<li>TA fAKe was occupied with 仕事, and cannot understand by himself in limited free time</li>
+<li>Even if you fail to give a working <code>Conv2D</code> implement, by explaining its principle clearly, you will receive partial credit.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="submit-your-homework">Submit Your Homework</h2>
+<p>First, make sure that you passed the <code>grade_all.py</code>.</p>
+<p>Then, you should write a detailed <strong>report</strong> under <code>docs/week3</code>, to describe the challenges you have encountered, how did you solved them, and what are the takeaways. (Also, attach the grader summary part from output of <code>grade_all.py</code>). This report accounts for part of your score.</p>
+<p>There is no optional challenge for week2, but if you complete week1'
+s OC, you may include it in this week's report.</p>
+<p>Finally zip the entire project folder into lab-week3.zip, and submit to canvas.</p>
+<p>Make sure that the TAs can run the <code>grade_all.py</code> and find your report from your submission.</p>
+
+</body>
+</html>

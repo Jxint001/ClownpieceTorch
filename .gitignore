@@ -204,3 +204,5 @@ tests/week4/fashion-minist/data/
 command
 
 structure.txt
+
+pytorch_module.py
