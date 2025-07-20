@@ -84,6 +84,7 @@ class Function(Node):
     def run(self, *args):
         # step 1. grad_inputs = self.backward(...) with no_grad
         with no_grad():
+            args = tuple(list(_ for _ in args if _ is not None))
             grad_inputs = self.backward(self.ctx, *args)
         # step 2. return grad_inputs
         return grad_inputs
