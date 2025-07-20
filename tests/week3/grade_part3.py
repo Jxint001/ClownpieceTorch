@@ -179,7 +179,7 @@ def test_init_kaiming_uniform():
     
     # Check expected variance
     fan_in = in_features
-    gain = init.calcuate_gain("relu")
+    gain = init.calculate_gain("relu")
     expected_std = gain / math.sqrt(fan_in)
     expected_bound = expected_std * math.sqrt(3.0)  # For uniform distribution
     
@@ -221,7 +221,7 @@ def test_init_kaiming_normal():
     
     # Check expected standard deviation
     fan_out = out_features
-    gain = init.calcuate_gain("relu")
+    gain = init.calculate_gain("relu")
     expected_std = gain / math.sqrt(fan_out)
     
     all_values = np.array(all_values)
