@@ -2,6 +2,7 @@ import sys
 import os
 from functools import wraps
 import numpy as np
+import traceback
 
 self_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(self_path + "/../../")
@@ -49,6 +50,7 @@ def exec_with_timeout(func, *args, timeout=None, **kwargs) -> Tuple[bool, Any]:
     except Exception as e:
         if DEBUG_MODE:
             print("Exception in execution:", e)
+            traceback.print_exc()  # 打印完整Traceback
             raise e
         return False, str(e)
 
