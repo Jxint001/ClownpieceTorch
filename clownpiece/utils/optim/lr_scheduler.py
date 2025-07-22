@@ -4,7 +4,11 @@ from typing import List, Callable
 class LRScheduler:
     def __init__(self, optimizer: Optimizer, last_epoch: int = -1):
         # You need to store base_lrs as to allow closed-form lr computation; you may assume that, optimizer does not add new param groups after initializing the LRSchduler.
-        pass
+        self.optimizer = optimizer
+        self.last_epoch = last_epoch
+        self.base_lrs = [group['lr'] for group in optimizer.param_groups]
+        
+        self.step()
 
     def get_lr(self) -> List[float]:        
         # Calculate new learning rates for each param_group.
@@ -16,11 +20,17 @@ class LRScheduler:
         # 1. Update self.last_epoch 
         # 2. Compute new LRs via self.get_lr()
         # 3. Assign each param_group['lr'] = corresponding new LR
-        pass
+        if epoch is None:
+            self.last_epoch += 1
+        else:
+            self.last_epoch = epoch
+        lrs = self.get_lr()
+        for group, lr in zip(self.optimizer.param_groups, lrs):
+            group['lr'] = lr
 
     def get_last_lr(self) -> List[float]:
         # Return the most recent learning rate for each param_group.
-        pass
+        return [group['lr'] for group in self.optimizer.param_groups]
       
     
 class LambdaLR(LRScheduler):
@@ -29,10 +39,11 @@ class LambdaLR(LRScheduler):
     Applies a user-defined function to the learning rate.
     """
     def __init__(self, optimizer, lr_lambda: Callable[[int], float], last_epoch: int = -1):
-        pass
+        self.lr_lambda = lr_lambda
+        super().__init__(optimizer, last_epoch)
 
     def get_lr(self) -> List[float]:
-        pass
+        return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]
     
 class ExponentialLR(LRScheduler):
     """
@@ -41,10 +52,11 @@ class ExponentialLR(LRScheduler):
     """
     
     def __init__(self, optimizer, gamma: float = 0.1, last_epoch: int = -1):
-        pass
+        self.gamma = gamma
+        super().__init__(optimizer, last_epoch)
 
     def get_lr(self) -> List[float]:
-        pass
+        return [base_lr * (self.gamma ** self.last_epoch) for base_lr in self.base_lrs]
         
 class StepLR(LRScheduler):
     """
@@ -53,8 +65,10 @@ class StepLR(LRScheduler):
     """
     
     def __init__(self, optimizer, step_size: int, gamma: float = 0.1, last_epoch: int = -1):
-        pass
+        self.step_size = step_size
+        self.gamma = gamma
+        super().__init__(optimizer, last_epoch)
 
     def get_lr(self) -> List[float]:
-        pass
-    
+        factor = self.gamma ** (self.last_epoch // self.step_size)
+        return [base_lr * factor for base_lr in self.base_lrs]

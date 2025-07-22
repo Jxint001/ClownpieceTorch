@@ -6,8 +6,20 @@ from clownpiece.tensor import empty_like
 
 
 class Parameter(Tensor):
+  _next_id = 0
+
   def __init__(self, data):
     super().__init__(data, requires_grad=True)
+    self.param_id = Parameter._next_id
+    Parameter._next_id += 1
+
+  def __hash__(self):
+    return hash(self.param_id)
+  
+  def __eq__(self, other):
+    if not isinstance(other, Parameter):
+      return False
+    return self.param_id == other.param_id
     
 
 class Buffer(Tensor):
