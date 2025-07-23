@@ -598,6 +598,26 @@ PYBIND11_MODULE(tensor_impl, m) {
     m.def("linspace", [](at::dtype start, at::dtype end, int num_steps) {
         return at::linspace(start, end, num_steps);
     }, py::arg("start"), py::arg("end"), py::arg("num_steps"), RELEASE_GIL, "Create a tensor with linearly spaced values from start to end with a specified number of steps");
+
+    // 添加 unfold 绑定
+    m.def("unfold", &at::unfold,
+        py::arg("x"), py::arg("k_h"), py::arg("k_w"),
+        py::arg("s_h"), py::arg("s_w"),
+        py::arg("p_t"), py::arg("p_b"),
+        py::arg("p_l"), py::arg("p_r"),
+        py::arg("d_h"), py::arg("d_w"),
+        "Unfold for Conv2D");
+
+    // 添加 fold 绑定
+    m.def("fold", &at::fold,
+        py::arg("x"), py::arg("org_input_shape"),
+        py::arg("k_h"), py::arg("k_w"),
+        py::arg("s_h"), py::arg("s_w"),
+        py::arg("p_t"), py::arg("p_b"),
+        py::arg("p_l"), py::arg("p_r"),
+        py::arg("d_h"), py::arg("d_w"),
+        "Fold for Conv2D");
+
 }
 
 /* Utils */

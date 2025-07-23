@@ -451,6 +451,16 @@ class TensorBase:
     var_impl = self._impl.var(dim, keepdims, unbiased)
     return self.__class__(var_impl)
   
+  # for Conv2D
+  def unfold(self, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w):
+    unfolded_impl = cp.unfold(self._impl, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w)
+    return self.__class__(unfolded_impl)
+  
+  # for Conv2D
+  def fold(self, shape, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w):
+    fold_impl = cp.fold(self._impl, shape, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w)
+    return self.__class__(fold_impl)
+  
 
 """
   Utils for Binding
@@ -755,7 +765,15 @@ class Tensor(TensorBase):
   @tensor_op('var', 'Var')
   def var(self, dim: int, keepdims: bool = False, unbiased: bool = True, FunctionClass=None) -> "Tensor":
     return FunctionClass().apply(self, dim, keepdims, unbiased)
-      
+  
+  @tensor_op('unfold', 'UnFold')
+  def unfold(self, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w, FunctionClass=None) -> "Tensor":
+    return FunctionClass().apply(self, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w)
+
+  @tensor_op('fold', 'Fold')
+  def Fold(self, output_size, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w, FunctionClass=None):
+    return FunctionClass().apply(self, output_size, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w)
+
   """
   STR
   """

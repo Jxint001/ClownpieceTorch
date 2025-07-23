@@ -661,3 +661,18 @@ class Broadcast(Function):
         for input_shape, grad_output in zip(ctx.inputs_shape, grad_outputs):
             grad_inputs.append(reduce_broadcast(grad_output, input_shape, grad_output.shape))
         return grad_inputs
+    
+# for Conv2D
+class UnFold(Function):
+    @staticmethod
+    def forward(ctx, input: Tensor, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w):
+        ctx.save_for_backward(input)
+        ctx.k_h, ctx.k_w, ctx.s_h, ctx.s_w, ctx.p_t, ctx.p_b, ctx.p_l, ctx.p_r, ctx.d_h, ctx.d_w = k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w
+        ret = input.unfold(k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w)
+        return ret
+
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor):
+        input, = ctx.get_saved_tensors()
+        output_size = input.shape
+        return Tensor.Fold(grad_output, output_size, ctx.k_h, ctx.k_w, ctx.s_h, ctx.s_w, ctx.p_t, ctx.p_b, ctx.p_l, ctx.p_r, ctx.d_h, ctx.d_w), None, None, None, None, None, None, None, None, None, None

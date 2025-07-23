@@ -1389,4 +1389,115 @@ namespace at {
     
     return var_tensor;
   }
+
+  /*
+    Week3 Optional Challenge
+    Fold and Unfold for Conv2D
+  */
+
+  Tensor Tensor::unfold(int k_h, int k_w, int s_h, int s_w, int p_t, int p_b, int p_l, int p_r, int d_h, int d_w) const {
+    if (s_h != 1 || s_w != 1) {
+      throw std::runtime_error("stride should be 1");
+    }
+    if (d_h != 1 || d_w != 1) {
+      throw std::runtime_error("dilation should be 1");
+    }
+    // by defaut groups = 1, padding is 'same'
+    auto[N, in_c, in_h, in_w] = std::tie(shape_[0], shape_[1], shape_[2], shape_[3]);
+    int out_h = in_h, out_w = in_w;
+    
+    int num_patches = out_h * out_w, patch_dim = in_c * k_h * k_w;
+    shape_t out_shape = {N, num_patches, patch_dim};
+    Tensor output(out_shape);
+
+    for (int n = 0; n < N; ++n) {
+      for (int h = 0; h < out_h; ++h) {
+        for (int w = 0; w < out_w; ++w) {
+          // patching begins at h, w in the padded tensor, but may differ in the original tensor
+          int org_h = h - p_t, org_w = w - p_l;
+          int patch_linear_idx = h * out_w + w;
+          int cur_feature_idx = 0;
+
+          for (int c = 0; c < in_c; ++c) {
+            for (int k_idx_h = 0; k_idx_h < k_h; ++k_idx_h) {
+              for (int k_idx_w = 0; k_idx_w < k_w; ++k_idx_w) {
+                // coordinate in the original tensor
+                int cur_h_in = org_h + k_idx_h;
+                int cur_w_in = org_w + k_idx_w;
+                int output_linear_index = n * (num_patches * patch_dim) + patch_linear_idx * patch_dim + cur_feature_idx;
+
+                // check whether current coordinate is valid
+                if (cur_h_in >= 0 && cur_h_in < in_h && cur_w_in >= 0 && cur_w_in < in_w) {
+                  output.data_at(output_linear_index) = data_at(n * in_c * in_h * in_w + c * in_h * in_w + cur_h_in * in_w + cur_w_in);
+                } else {
+                  output.data_at(output_linear_index) = static_cast<dtype>(0);
+                }
+                ++cur_feature_idx;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return output;
+  }
+
+  
+  Tensor unfold(const Tensor& x, int k_h, int k_w, int s_h, int s_w, int p_t, int p_b, int p_l, int p_r, int d_h, int d_w) {
+    return x.unfold(k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w);
+  }
+
+  Tensor Tensor::fold(const shape_t& org_input_shape, int k_h, int k_w, int s_h, int s_w, int p_t, int p_b, int p_l, int p_r, int d_h, int d_w) const {
+    auto[n_grad, num_patches_grad, patch_dim_grad] = std::tie(shape_[0], shape_[1], shape_[2]);
+    auto[n_org, c_org, h_org, w_org] = std::tie(org_input_shape[0], org_input_shape[1], org_input_shape[2], org_input_shape[3]);
+
+    int c_in = c_org;
+    if (n_grad != n_org) {
+      throw std::runtime_error("batch size mismatch in fold");
+    }
+    int N = n_org;
+    if (patch_dim_grad != c_org * k_h * k_w) {
+      throw std::runtime_error("patch_dim_grad not aligned");
+    }
+    int h_out_calc = (h_org + p_t + p_b - k_h) / s_h + 1;
+    int w_out_calc = (w_org + p_l + p_r - k_w) / s_w + 1;
+
+    int h_out = h_out_calc, w_out = w_out_calc;
+
+    Tensor grad_input(org_input_shape, 0.0);
+    for (int n = 0; n < N; ++n) {
+      for (int h = 0; h < h_out; ++h) {
+        for (int w = 0; w < w_out; ++w) {
+          int patch_linear_idx = h * w_out + w;
+          int h_start_org = h - p_t;
+          int w_start_org = w - p_l;
+
+          int cur_feature_idx = 0;
+          for (int c = 0; c < c_in; ++c) {
+            for (int k_idx_h = 0; k_idx_h < k_h; ++k_idx_h) {
+              for (int k_idx_w = 0; k_idx_w < k_w; ++k_idx_w) {
+                int cur_h_in = h_start_org + k_idx_h * d_h;
+                int cur_w_in = w_start_org + k_idx_w * d_w;
+                int grad_output_linear_idx = n * num_patches_grad * patch_dim_grad + patch_linear_idx * patch_dim_grad + cur_feature_idx;
+
+                if (cur_h_in >=0 && cur_h_in < h_org && cur_w_in >= 0 && cur_w_in < w_org) {
+                  int grad_input_linear_idx = n * c_in * h_org * w_org + c * h_org * w_org + cur_h_in * w_org + cur_w_in;
+                  grad_input.data_at(grad_input_linear_idx) += data_at(grad_output_linear_idx);
+                }
+
+                ++cur_feature_idx;
+              }
+            }
+          }
+        }
+      }
+    }
+    return grad_input;
+  }
+
+  Tensor fold(const Tensor& x, const shape_t& org_input_shape, int k_h, int k_w, int s_h, int s_w, int p_t, int p_b, int p_l, int p_r, int d_h, int d_w) {
+    return x.fold(org_input_shape, k_h, k_w, s_h, s_w, p_t, p_b, p_l, p_r, d_h, d_w);
+  }
+  
 };

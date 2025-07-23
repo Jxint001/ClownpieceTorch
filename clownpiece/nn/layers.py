@@ -83,20 +83,14 @@ class LayerNorm(Module):
         self.beta = self.register_parameter("beta", None)
 
     def forward(self, x: Tensor) -> Tensor:
-      # print("before op x is ", x)
       fornorm = x.reshape([-1, self.num_features])
-      # print("fornorm is ", fornorm)
       mean = fornorm.mean(dim=-1, keepdims=True)
-      # print("mean is ", mean)
       var = fornorm.var(dim=-1, keepdims=True)
-      # print("var is ", var)
       x_hat = (x - mean) / (var + self.eps).sqrt()
-      # print("x_hat is ", x_hat)
       if self.affine:
         x_hat = x_hat * self.gama + self.beta
       
       ret = x_hat.reshape(list(x.shape))
-      # print("ret is ", ret)
       return ret
 
     def extra_repr(self):
@@ -187,3 +181,66 @@ class MultiheadAttention(Module):
 
     def extra_repr(self):
       return f"hidden_dim={self.hidden_dim}, num_heads={self.num_heads}"
+    
+class Conv2d(Module):
+    def __init__(self, in_channels, out_channels, kernel_height, kernel_width):
+      super().__init__()
+      self.in_channels = in_channels
+      self.out_channels = out_channels
+      self.kernel_height = kernel_height
+      self.kernel_width = kernel_width
+      
+      self.weight = Parameter(Tensor.empty([out_channels, in_channels, kernel_height, kernel_width]))
+      self.bias = Parameter(Tensor.empty([out_channels]))
+      self.reset_parameters()
+
+    def reset_parameters(self):
+      # kaiming initialization
+      # fan_in = self.in_channels * self.kernel_height * self.kernel_width
+      # bound = math.sqrt(1 / fan_in)
+      # init.uniform_(self.weight, -bound, bound)
+      # init.uniform_(self.bias, -bound, bound)
+      init.ones_(self.weight)
+      init.zeros_(self.bias)
+
+    def forward(self, x: Tensor):
+      # x: input Tensor with shape[batch_size, in_channels, in_height, in_width]
+      batch_size, in_channels, in_height, in_width = x.shape
+
+      # calculate paddings
+      total_padding_h = self.kernel_height - 1 
+      padding_top = total_padding_h // 2
+      padding_bottom = total_padding_h - padding_top  # for potential asymmetrical padding
+
+      total_padding_w = self.kernel_width - 1
+      padding_left = total_padding_w // 2
+      padding_right = total_padding_w - padding_left
+
+      # flattened_kernel.shape = [in_channels * kernel_height * kernel_width, out_channels] = [patch_dim, out_channels]
+      flattened_kernel = self.weight.reshape([self.out_channels, -1]).transpose(0, 1)
+
+      # Unfold
+      # unfolded_x.shape = [batch_size, num_patches, patch_dim]
+      # num_patches = out_height * out_width = in_height * in_width
+      # patch_dim = in_channels * kernel_height * kernel_width
+      unfolded_x = x.unfold(self.kernel_height, self.kernel_width,
+                            1, 1, # stride_height and stride_width fixed to 1
+                            padding_top, padding_bottom,
+                            padding_left, padding_right,
+                            1, 1 # dilation_height and dilation_width fixed to 1
+                            )
+      # MatMul
+      # output_matrix.shape = [batch_size, num_patches, out_channels]
+      output_matrix = unfolded_x.matmul(flattened_kernel) 
+
+      # Reshape
+      output = output_matrix.permute([0, 2, 1])
+      output = output.reshape([batch_size, self.out_channels, in_height, in_width])
+      # output.shape = [batch_size, out_channels, in_height, in_width]
+
+      # add bias
+      output = output + self.bias 
+      return output
+    
+    def extra_repr(self):
+      return f"in_channels={self.in_channels}, out_channels={self.out_channels}, kernel_height={self.kernel_height}, kernel_width={self.kernel_width}"
